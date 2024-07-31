@@ -2,7 +2,6 @@ package io.github.liyze09.arms.network.packet.clientbound;
 
 import io.github.liyze09.arms.network.Connection;
 import io.github.liyze09.arms.network.MinecraftProtocol;
-import io.github.liyze09.arms.network.PackUtils;
 import io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,7 +34,7 @@ public class LoginSuccess implements ClientBoundPacketEncoder<LoginSuccess.Login
         }
 
         var bytes = out.toByteArray();
-        return PackUtils.generatePacket(0x02, bytes);
+        return MinecraftProtocol.Packet.of(0x02, bytes);
     }
     public record LoginSuccessBody (
         Connection.UUID uuid,

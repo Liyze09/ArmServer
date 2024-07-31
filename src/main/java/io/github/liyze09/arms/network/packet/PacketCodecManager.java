@@ -1,5 +1,6 @@
 package io.github.liyze09.arms.network.packet;
 
+import io.github.liyze09.arms.network.packet.serverbound.LoginAcknowledged;
 import io.github.liyze09.arms.network.packet.serverbound.LoginStart;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -52,5 +53,6 @@ public final class PacketCodecManager {
 
     public void registerPackets() {
         registerServerBoundPacket(PackType.SERVER_LOGIN, 0, new LoginStart());
+        registerServerBoundPacket(PackType.SERVER_LOGIN, 0x03, new LoginAcknowledged());
     }
 }

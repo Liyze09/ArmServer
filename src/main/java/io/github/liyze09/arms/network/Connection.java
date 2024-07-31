@@ -6,19 +6,15 @@ import org.smartboot.socket.transport.AioSession;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
 
 public final class Connection {
     private static final Map<AioSession, Connection> connections = new ConcurrentHashMap<>();
     public final AioSession session;
-    private volatile String username = null;
-    private volatile UUID uuid = null;
-    private volatile int protocolVersion = -1;
-    private volatile Status status = Status.HANDSHAKE;
-    private static final ReentrantLock lock0 = new ReentrantLock();
-    private final ReentrantLock lock = new ReentrantLock();
+    private String username = null;
+    private UUID uuid = null;
+    private int protocolVersion = -1;
+    private Status status = Status.HANDSHAKE;;
     private Connection(AioSession session) {
         this.session = session;
         connections.put(session, this);
@@ -26,38 +22,23 @@ public final class Connection {
 
     @Contract("_ -> new")
     public static @NotNull Connection addConnection(AioSession session) {
-        try {
-            lock0.lock();
-            return new Connection(
-                    Objects.requireNonNull(session)
-            );
-        } finally {
-            lock0.unlock();
-        }
+        return new Connection(
+                Objects.requireNonNull(session)
+        );
     }
 
     public static @NotNull Connection getInstance(AioSession session) {
-        try {
-            lock0.lock();
-            Objects.requireNonNull(session);
-            var connection = connections.get(session);
-            if (connection == null) {
-                connection = addConnection(session);
-            }
-            return connection;
-        } finally {
-            lock0.unlock();
+        Objects.requireNonNull(session);
+        var connection = connections.get(session);
+        if (connection == null) {
+            connection = addConnection(session);
         }
+        return connection;
     }
 
     public static void disconnect(AioSession session) {
-        try {
-            lock0.lock();
-            connections.remove(session);
-            session.close();
-        } finally {
-            lock0.unlock();
-        }
+        connections.remove(session);
+        session.close();
     }
 
 
@@ -98,12 +79,6 @@ public final class Connection {
         Objects.requireNonNull(uuid);
         if (this.uuid != null) throw new UnsupportedOperationException();
         this.uuid = uuid;
-    }
-    public synchronized void lock() {
-        lock.lock();
-    }
-    public synchronized void unlock() {
-        lock.unlock();
     }
 
     @Override

@@ -13,7 +13,6 @@ public class NetworkHandler {
             new MinecraftProtocol(),
             (session, packet) -> {
                 var connection = Connection.getInstance(session);
-                connection.lock();
                 switch (connection.getStatus()) {
                     case LOGIN -> PacketCodecManager
                             .getInstance()
@@ -32,7 +31,7 @@ public class NetworkHandler {
                             .getServerDecoder(PackType.SERVER_STATUS, packet.id())
                             .decode(ByteBuffer.wrap(packet.data()), connection);
                 }
-                connection.unlock();
-            });
+            }).setBannerEnabled(false)
+            .setLowMemory(true);
 
 }

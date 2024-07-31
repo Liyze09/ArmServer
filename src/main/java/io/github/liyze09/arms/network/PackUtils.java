@@ -5,12 +5,10 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.smartboot.socket.transport.WriteBuffer;
 
-import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 
 public class PackUtils {
@@ -20,18 +18,22 @@ public class PackUtils {
         return protocolVersion >= minVersion && protocolVersion < 0x40000000;
     }
 
-    @Contract("_, _ -> new")
-    public static MinecraftProtocol.@NotNull Packet generatePacket(int id, byte @NotNull [] data) {
-        return new MinecraftProtocol.Packet(data.length+getVarIntLength(id), id, data);
-    }
+
 
     public static int getVarIntLength(int varInt) {
-        int length = 0;
-        while ((varInt & 0xFFFFFF80) != 0) {
-            varInt >>>= 7;
-            length++;
+        if (varInt < 0) {
+            return 5;
+        } else if (varInt <= 127) {
+            return 1;
+        } else if (varInt <= 16383) {
+            return 2;
+        } else if (varInt <= 2097151) {
+            return 3;
+        } else if (varInt <= 268435455) {
+            return 4;
+        } else {
+            return 5;
         }
-        return length + 1;
     }
     public static <T> void sendPacket(Connection connection, T msg, @NotNull ClientBoundPacketEncoder<T> encoder) {
         try {

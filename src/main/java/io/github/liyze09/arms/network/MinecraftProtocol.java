@@ -2,6 +2,7 @@ package io.github.liyze09.arms.network;
 
 import io.github.liyze09.arms.network.exception.IllegalPacketException;
 import io.github.liyze09.arms.network.packet.ServerBoundPacketDecoder;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.smartboot.socket.Protocol;
 import org.smartboot.socket.transport.AioSession;
@@ -11,7 +12,6 @@ import java.nio.ByteBuffer;
 import static io.github.liyze09.arms.network.NetworkHandler.MIN_PROTOCOL_VERSION;
 import static io.github.liyze09.arms.network.PackUtils.*;
 import static io.github.liyze09.arms.util.BytesUtil.readBytes;
-import static java.lang.System.out;
 
 public class MinecraftProtocol implements Protocol<MinecraftProtocol.Packet> {
     @Override
@@ -35,6 +35,11 @@ public class MinecraftProtocol implements Protocol<MinecraftProtocol.Packet> {
             var packID = readVarInt(data);
             data.compact();
             return new Packet(length, packID, data.array());
+        }
+
+        @Contract("_, _ -> new")
+        public static MinecraftProtocol.@NotNull Packet of(int id, byte @NotNull [] data) {
+            return new MinecraftProtocol.Packet(data.length + getVarIntLength(id), id, data);
         }
     }
 
