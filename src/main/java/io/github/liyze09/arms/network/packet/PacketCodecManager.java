@@ -43,14 +43,6 @@ public final class PacketCodecManager {
         SERVER_STATUS
     }
 
-    public record ServerHandshakePacketBody (
-        int protocolVersion,
-        String serverAddress,
-        int serverPort,
-        int nextState
-    ) {
-    }
-
     public void registerPackets() {
         registerServerBoundPacket(PackType.SERVER_LOGIN, 0, new LoginStart());
         registerServerBoundPacket(PackType.SERVER_LOGIN, 0x03, new LoginAcknowledged());
