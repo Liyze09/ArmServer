@@ -1,10 +1,9 @@
 package io.github.liyze09.arms.network.packet;
 
 import io.github.liyze09.arms.network.Connection;
-
-import java.nio.ByteBuffer;
+import io.netty.buffer.ByteBuf;
 
 @FunctionalInterface
 public interface ServerBoundPacketDecoder {
-    void decode(ByteBuffer buf, Connection connection);
+    void decode(ByteBuf buf, Connection connection);
 }

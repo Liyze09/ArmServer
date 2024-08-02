@@ -1,14 +1,13 @@
 package io.github.liyze09.arms.network;
 
 import io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder;
+import io.netty.buffer.ByteBuf;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.smartboot.socket.transport.WriteBuffer;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 public class PackUtils {
@@ -35,40 +34,37 @@ public class PackUtils {
             return 5;
         }
     }
-    public static <T> void sendPacket(Connection connection, T msg, @NotNull ClientBoundPacketEncoder<T> encoder) {
+    public static <T> void sendPacket(@NotNull Connection connection, T msg, @NotNull ClientBoundPacketEncoder<T> encoder) {
         try {
-            var packet = encoder.encode(msg, connection);
-            var buffer = connection.session.writeBuffer();
-            writeVarInt(packet.length(), buffer);
-            writeVarInt(packet.id(), buffer);
-            buffer.write(packet.data());
+            connection.ctx.writeAndFlush(encoder.encode(msg, connection));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static void writeString(@NotNull String msg, WriteBuffer buffer) throws IOException {
+    public static void writeString(@NotNull String msg, ByteBuf buffer) {
         var bytes = msg.getBytes(StandardCharsets.UTF_8);
         writeVarInt(bytes.length, buffer);
-        buffer.write(bytes);
+        buffer.writeBytes(bytes);
     }
 
     @Contract("_ -> new")
-    public static @NotNull String readString(ByteBuffer input) {
+    public static @NotNull String readString(ByteBuf input) {
         int length = readVarInt(input);
 
         byte[] data = new byte[length];
-        input.get(data);
+        input.readBytes(data);
 
         return new String(data, StandardCharsets.UTF_8);
     }
-    public static int readVarInt(@NotNull ByteBuffer input)  {
+
+    public static int readVarInt(@NotNull ByteBuf input)  {
         int value = 0;
         int position = 0;
         byte currentByte;
 
         while (true) {
-            currentByte = input.get();
+            currentByte = input.readByte();
             value |= (currentByte & SEGMENT_BITS) << position;
 
             if ((currentByte & CONTINUE_BIT) == 0) break;
@@ -90,6 +86,19 @@ public class PackUtils {
             }
 
             output.writeByte((byte) ((value & SEGMENT_BITS) | CONTINUE_BIT));
+
+            value >>>= 7;
+        }
+    }
+
+    public static void writeVarInt(int value, @NotNull ByteBuf out) {
+        while (true) {
+            if ((value & ~SEGMENT_BITS) == 0) {
+                out.writeByte((byte) value);
+                return;
+            }
+
+            out.writeByte((byte) ((value & SEGMENT_BITS) | CONTINUE_BIT));
 
             value >>>= 7;
         }
