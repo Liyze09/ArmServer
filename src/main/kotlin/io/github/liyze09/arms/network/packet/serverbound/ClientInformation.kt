@@ -1,15 +1,14 @@
 package io.github.liyze09.arms.network.packet.serverbound
 
-import io.github.liyze09.arms.ArmServer.LOGGER
 import io.github.liyze09.arms.network.Connection
 import io.github.liyze09.arms.network.Connection.*
-import io.github.liyze09.arms.network.PackUtils
+import io.github.liyze09.arms.network.PackUtils.readString
 import io.github.liyze09.arms.network.packet.ServerBoundPacketDecoder
 import io.netty.buffer.ByteBuf
 
 class ClientInformation : ServerBoundPacketDecoder {
     override fun decode(buf: ByteBuf, connection: Connection) {
-        connection.updateLocale(PackUtils.readString(buf))
+        connection.updateLocale(buf.readString())
         connection.updateViewDistance(buf.readByte())
         connection.updateChatMode(ChatMode.entries.toTypedArray().get(buf.readByte().toInt()))
         connection.updateChatColors(buf.readByte().toInt() == 1)
@@ -28,6 +27,5 @@ class ClientInformation : ServerBoundPacketDecoder {
         connection.updateMainHand(MainHand.entries.toTypedArray().get(buf.readByte().toInt()))
         buf.readByte()
         connection.updateAllowServerListings(buf.readByte().toInt() == 1)
-        LOGGER.info("Client information: {}", connection)
     }
 }

@@ -1,8 +1,10 @@
 package io.github.liyze09.arms.network
 
+import io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder
 import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelHandlerContext
 import org.jetbrains.annotations.Contract
+import java.io.IOException
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -98,6 +100,14 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
             check(this.uuid == null)
             this.uuid = uuid
         }
+
+    fun <T> sendPacket(msg: T, encoder: ClientBoundPacketEncoder<T>) {
+        try {
+            this.ctx.writeAndFlush(encoder.encode(msg, this))
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        }
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

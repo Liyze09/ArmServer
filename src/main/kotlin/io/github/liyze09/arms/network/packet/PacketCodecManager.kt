@@ -3,10 +3,13 @@ package io.github.liyze09.arms.network.packet
 import io.github.liyze09.arms.network.Connection
 import io.github.liyze09.arms.network.NettyInitialize
 import io.github.liyze09.arms.network.PackUtils
+import io.github.liyze09.arms.network.PackUtils.readString
+import io.github.liyze09.arms.network.PackUtils.readVarInt
 import io.github.liyze09.arms.network.exception.IllegalPacketException
 import io.github.liyze09.arms.network.packet.serverbound.ClientInformation
 import io.github.liyze09.arms.network.packet.serverbound.LoginAcknowledged
 import io.github.liyze09.arms.network.packet.serverbound.LoginStart
+import io.github.liyze09.arms.network.packet.serverbound.PluginMessage
 import io.netty.buffer.ByteBuf
 import org.jetbrains.annotations.Contract
 import java.util.concurrent.ConcurrentHashMap
@@ -44,23 +47,23 @@ object PacketCodecManager {
         registerServerBoundPacket(Connection.Status.LOGIN, 0x00, LoginStart())
         registerServerBoundPacket(Connection.Status.LOGIN, 0x03, LoginAcknowledged())
         registerServerBoundPacket(Connection.Status.CONFIGURATION, 0x00, ClientInformation())
+        registerServerBoundPacket(Connection.Status.CONFIGURATION, 0x02, PluginMessage())
     }
 
 
     private val handshakeHandler: ServerBoundPacketDecoder =
         ServerBoundPacketDecoder { buf: ByteBuf, connection: Connection ->
-            val protocolVersion = PackUtils.readVarInt(buf)
+            val protocolVersion = buf.readVarInt()
             if (!PackUtils.checkProtocolVersion(protocolVersion, NettyInitialize.MIN_PROTOCOL_VERSION)) {
                 throw IllegalPacketException("Invalid protocol version: $protocolVersion")
             }
             connection.protocolVersion = protocolVersion // Protocol Version
-            PackUtils.readString(buf) // Server Address (unused)
+            buf.readString() // Server Address (unused)
             buf.readShort() // Server Port (unused)
-            when (PackUtils.readVarInt(buf)) {
+            when (buf.readVarInt()) {
                 2 -> connection.updateStatus(Connection.Status.LOGIN)
                 1 -> connection.updateStatus(Connection.Status.STATUS)
-                else -> throw IllegalPacketException("Invalid next state: " + PackUtils.readVarInt(buf))
-
+                else -> throw IllegalPacketException("Invalid next state of handshake packet")
             }
         }
 }

@@ -2,6 +2,8 @@ package io.github.liyze09.arms.network
 
 import io.github.liyze09.arms.Configuration
 import io.github.liyze09.arms.network.Connection.Companion.getInstance
+import io.github.liyze09.arms.network.PackUtils.readVarInt
+import io.github.liyze09.arms.network.PackUtils.writeVarInt
 import io.github.liyze09.arms.network.packet.Packet
 import io.github.liyze09.arms.network.packet.PacketCodecManager
 import io.netty.bootstrap.ServerBootstrap
@@ -31,8 +33,8 @@ object NettyInitialize {
                     pipeline.addLast(object : ByteToMessageCodec<Packet>() {
                         override fun encode(channelHandlerContext: ChannelHandlerContext, o: Packet, byteBuf: ByteBuf) {
                             val buf = channelHandlerContext.alloc().buffer(o.length + 5)
-                            PackUtils.writeVarInt(o.length, buf)
-                            PackUtils.writeVarInt(o.id, buf)
+                            buf.writeVarInt(o.length)
+                            buf.writeVarInt(o.id)
                             buf.writeBytes(o.data)
                             channelHandlerContext.channel().writeAndFlush(buf)
                         }
@@ -43,8 +45,8 @@ object NettyInitialize {
                             list: MutableList<Any>
                         ) {
                             while (byteBuf.isReadable) {
-                                val length = PackUtils.readVarInt(byteBuf)
-                                val id = PackUtils.readVarInt(byteBuf)
+                                val length = byteBuf.readVarInt()
+                                val id = byteBuf.readVarInt()
                                 val data = byteBuf.readBytes(length - PackUtils.getVarIntLength(id))
                                 list.add(Packet(length, id, data))
                             }

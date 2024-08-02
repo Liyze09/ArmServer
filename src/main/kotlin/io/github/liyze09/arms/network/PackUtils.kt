@@ -1,11 +1,8 @@
 package io.github.liyze09.arms.network
 
-import io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder
+import io.github.liyze09.arms.common.Identifier
 import io.netty.buffer.ByteBuf
 import org.jetbrains.annotations.Contract
-import java.io.DataOutputStream
-import java.io.IOException
-import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 
 object PackUtils {
@@ -32,37 +29,31 @@ object PackUtils {
         }
     }
 
-    fun <T> sendPacket(connection: Connection, msg: T, encoder: ClientBoundPacketEncoder<T>) {
-        try {
-            connection.ctx.writeAndFlush(encoder.encode(msg, connection))
-        } catch (e: IOException) {
-            throw RuntimeException(e)
-        }
-    }
-
-    fun writeString(msg: String, buffer: ByteBuf) {
+    fun ByteBuf.writeString(msg: String) {
         val bytes = msg.toByteArray(StandardCharsets.UTF_8)
-        writeVarInt(bytes.size, buffer)
-        buffer.writeBytes(bytes)
+        this.writeVarInt(bytes.size)
+        this.writeBytes(bytes)
     }
 
     @Contract("_ -> new")
-    fun readString(input: ByteBuf): String {
-        val length = readVarInt(input)
+    fun ByteBuf.readString(): String {
+        val length = this.readVarInt()
 
         val data = ByteArray(length)
-        input.readBytes(data)
+        this.readBytes(data)
 
         return String(data, StandardCharsets.UTF_8)
     }
 
-    fun readVarInt(input: ByteBuf): Int {
+    fun ByteBuf.readIdentifier(): Identifier = Identifier(this.readString())
+
+    fun ByteBuf.readVarInt(): Int {
         var value = 0
         var position = 0
         var currentByte: Byte
 
         while (true) {
-            currentByte = input.readByte()
+            currentByte = this.readByte()
             value = value or ((currentByte.toInt() and SEGMENT_BITS) shl position)
 
             if ((currentByte.toInt() and CONTINUE_BIT) == 0) break
@@ -75,34 +66,15 @@ object PackUtils {
         return value
     }
 
-    @Throws(IOException::class)
-    fun writeVarInt(input: Int, out: OutputStream) {
-        var value = input
-        val output = DataOutputStream(out)
-        while (true) {
-            if ((value and SEGMENT_BITS.inv()) == 0) {
-                output.writeByte(value.toByte().toInt())
-                return
-            }
-
-            output.writeByte(
-                ((value and SEGMENT_BITS) or CONTINUE_BIT).toByte()
-                    .toInt()
-            )
-
-            value = value ushr 7
-        }
-    }
-
-    fun writeVarInt(input: Int, out: ByteBuf) {
+    fun ByteBuf.writeVarInt(input: Int) {
         var value = input
         while (true) {
             if ((value and SEGMENT_BITS.inv()) == 0) {
-                out.writeByte(value.toByte().toInt())
+                this.writeByte(value.toByte().toInt())
                 return
             }
 
-            out.writeByte(
+            this.writeByte(
                 ((value and SEGMENT_BITS) or CONTINUE_BIT).toByte()
                     .toInt()
             )
