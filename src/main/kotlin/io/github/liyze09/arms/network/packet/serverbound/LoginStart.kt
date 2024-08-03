@@ -7,12 +7,12 @@ import io.github.liyze09.arms.network.packet.clientbound.LoginSuccess
 import io.github.liyze09.arms.network.packet.clientbound.LoginSuccessBody
 import io.netty.buffer.ByteBuf
 
-class LoginStart : ServerBoundPacketDecoder {
+object LoginStart : ServerBoundPacketDecoder {
     override fun decode(buf: ByteBuf, connection: Connection) {
         val username = buf.readString()
         val uuid = Connection.UUID(buf.readLong(), buf.readLong())
-        connection.name = username
-        connection.uUID = uuid
+        connection.setUsername(username)
+        connection.setUUID(uuid)
         connection.sendPacket(
             LoginSuccessBody(uuid, username),
             LoginSuccess

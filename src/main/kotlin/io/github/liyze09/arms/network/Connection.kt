@@ -1,5 +1,6 @@
 package io.github.liyze09.arms.network
 
+import io.github.liyze09.arms.network.NettyInitialize.LOGGER
 import io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder
 import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelHandlerContext
@@ -11,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap
 class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
     @Synchronized
     fun updateStatus(status: Status) {
-        Objects.requireNonNull(status)
         this.status = status
     }
 
@@ -43,16 +43,15 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
         this.isChatColors = chatColors
     }
 
-    var name: String?
-        get() {
-            checkNotNull(displayedSkinParts)
-            return username
-        }
-        set(username) {
-            Objects.requireNonNull(username)
-            check(this.username == null)
-            this.username = username
-        }
+    fun getUsername(): String {
+        checkNotNull(username)
+        return username as String
+    }
+
+    fun setUsername(username: String) {
+        check(this.username == null)
+        this.username = username
+    }
 
     fun getLocale(): String {
         checkNotNull(locale)
@@ -60,7 +59,6 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
     }
 
     fun updateLocale(locale: String) {
-        Objects.requireNonNull(locale)
         this.locale = locale
     }
 
@@ -75,7 +73,6 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
     }
 
     fun updateChatMode(chatMode: ChatMode) {
-        Objects.requireNonNull(chatMode)
         this.chatMode = chatMode
     }
 
@@ -90,24 +87,25 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
         this.protocolVersion = protocolVersion
     }
 
-    var uUID: UUID
-        get() {
-            checkNotNull(uuid)
-            return uuid as UUID
-        }
-        set(uuid) {
-            Objects.requireNonNull(uuid)
-            check(this.uuid == null)
-            this.uuid = uuid
-        }
+    fun getUUID(): UUID {
+        checkNotNull(uuid)
+        return uuid as UUID
+    }
 
-    fun <T> sendPacket(msg: T, encoder: ClientBoundPacketEncoder<T>) {
+    fun setUUID(uuid: UUID) {
+        check(this.uuid == null)
+        this.uuid = uuid
+    }
+
+    fun <T> sendPacket(msg: T, encoder: ClientBoundPacketEncoder<T>): ChannelFuture =
         try {
-            this.ctx.writeAndFlush(encoder.encode(msg, this))
+            val packet = encoder.encode(msg, this)
+            LOGGER.debug("To {}: {}", this.ctx.name(), packet)
+            this.ctx.writeAndFlush(packet)
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
-    }
+
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -115,9 +113,8 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
         return ctx == other.ctx
     }
 
-    override fun hashCode(): Int {
-        return ctx.hashCode()
-    }
+    override fun hashCode(): Int = ctx.hashCode()
+
 
     override fun toString(): String {
         return "Connection{" +
@@ -136,6 +133,8 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
                 '}'
     }
 
+    fun getStatus(): Status = status
+
     enum class Status {
         HANDSHAKE,
         LOGIN,
@@ -146,9 +145,7 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
 
     @JvmRecord
     data class UUID(val a: Long, val b: Long) {
-        override fun toString(): String {
-            return String.format("%016x%016x", a, b)
-        }
+        override fun toString(): String = String.format("%016x%016x", a, b)
     }
 
     enum class ChatMode {
@@ -176,8 +173,7 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
     private var username: String? = null
     private var uuid: UUID? = null
     internal var protocolVersion = -1
-    var status: Status = Status.HANDSHAKE
-        private set
+    private var status: Status = Status.HANDSHAKE
     private var locale: String? = null
     private var viewDistance: Byte = -1
     private var chatMode: ChatMode? = null
@@ -192,11 +188,7 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
 
     companion object {
         @Contract("_ -> new")
-        fun addConnection(ctx: ChannelHandlerContext): Connection {
-            return Connection(
-                Objects.requireNonNull(ctx)
-            )
-        }
+        internal fun addConnection(ctx: ChannelHandlerContext): Connection = Connection(ctx)
 
         @JvmStatic
         fun getInstance(session: ChannelHandlerContext): Connection {

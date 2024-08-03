@@ -12,9 +12,12 @@ import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.ByteToMessageCodec
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 object NettyInitialize {
     const val MIN_PROTOCOL_VERSION: Int = 767
+    val LOGGER: Logger = LoggerFactory.getLogger("Network")
 
     @JvmField
     val bossGroup: NioEventLoopGroup = NioEventLoopGroup()
@@ -48,14 +51,16 @@ object NettyInitialize {
                                 val length = byteBuf.readVarInt()
                                 val id = byteBuf.readVarInt()
                                 val data = byteBuf.readBytes(length - PackUtils.getVarIntLength(id))
-                                list.add(Packet(length, id, data))
+                                val packet = Packet(length, id, data)
+                                LOGGER.debug("{}: {}", channelHandlerContext.name(), packet)
+                                list.add(packet)
                             }
                         }
                     })
                     pipeline.addLast(object : SimpleChannelInboundHandler<Packet>() {
                         override fun channelRead0(ctx: ChannelHandlerContext, packet: Packet) {
                             val connection = getInstance(ctx)
-                            PacketCodecManager.getServerDecoder(connection.status, packet.id)
+                            PacketCodecManager.getServerDecoder(connection.getStatus(), packet.id)
                                 ?.decode(packet.data, connection)
                         }
                     })

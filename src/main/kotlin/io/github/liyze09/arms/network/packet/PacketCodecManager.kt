@@ -6,10 +6,7 @@ import io.github.liyze09.arms.network.PackUtils
 import io.github.liyze09.arms.network.PackUtils.readString
 import io.github.liyze09.arms.network.PackUtils.readVarInt
 import io.github.liyze09.arms.network.exception.IllegalPacketException
-import io.github.liyze09.arms.network.packet.serverbound.ClientInformation
-import io.github.liyze09.arms.network.packet.serverbound.LoginAcknowledged
-import io.github.liyze09.arms.network.packet.serverbound.LoginStart
-import io.github.liyze09.arms.network.packet.serverbound.PluginMessage
+import io.github.liyze09.arms.network.packet.serverbound.*
 import io.netty.buffer.ByteBuf
 import org.jetbrains.annotations.Contract
 import java.util.concurrent.ConcurrentHashMap
@@ -44,10 +41,13 @@ object PacketCodecManager {
     }
 
     fun registerPackets() {
-        registerServerBoundPacket(Connection.Status.LOGIN, 0x00, LoginStart())
-        registerServerBoundPacket(Connection.Status.LOGIN, 0x03, LoginAcknowledged())
-        registerServerBoundPacket(Connection.Status.CONFIGURATION, 0x00, ClientInformation())
-        registerServerBoundPacket(Connection.Status.CONFIGURATION, 0x02, PluginMessage())
+        registerServerBoundPacket(Connection.Status.LOGIN, 0x00, LoginStart)
+        registerServerBoundPacket(Connection.Status.LOGIN, 0x03, LoginAcknowledged)
+        registerServerBoundPacket(Connection.Status.CONFIGURATION, 0x00, ClientInformation)
+        registerServerBoundPacket(Connection.Status.CONFIGURATION, 0x02, PluginMessage)
+        registerServerBoundPacket(Connection.Status.CONFIGURATION, 0x03, AcknowledgeFinishConfiguration)
+        registerServerBoundPacket(Connection.Status.CONFIGURATION, 0x07, KnownPacks)
+        registerServerBoundPacket(Connection.Status.PLAY, 0x12, PluginMessage)
     }
 
 
@@ -59,7 +59,7 @@ object PacketCodecManager {
             }
             connection.protocolVersion = protocolVersion // Protocol Version
             buf.readString() // Server Address (unused)
-            buf.readShort() // Server Port (unused)
+            buf.readUnsignedShort() // Server Port (unused)
             when (buf.readVarInt()) {
                 2 -> connection.updateStatus(Connection.Status.LOGIN)
                 1 -> connection.updateStatus(Connection.Status.STATUS)

@@ -83,5 +83,13 @@ object PackUtils {
         }
     }
 
+    fun ByteBuf.readMCBoolean(): Boolean {
+        return this.readByte().toInt() != 0
+    }
+
+    fun ByteBuf.writeMCBoolean(value: Boolean) {
+        this.writeByte(if (value) 1 else 0)
+    }
+
     class VarIntTooBigException : RuntimeException("VarInt is too big or invalid")
 }
