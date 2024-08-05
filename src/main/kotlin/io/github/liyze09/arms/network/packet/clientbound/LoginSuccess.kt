@@ -1,6 +1,7 @@
 package io.github.liyze09.arms.network.packet.clientbound
 
 import io.github.liyze09.arms.network.Connection
+import io.github.liyze09.arms.network.PackUtils.writeMCBoolean
 import io.github.liyze09.arms.network.PackUtils.writeVarInt
 import io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder
 import io.github.liyze09.arms.network.packet.Packet
@@ -18,7 +19,7 @@ object LoginSuccess : ClientBoundPacketEncoder<LoginSuccessBody> {
 
         buffer.writeVarInt(0)
 
-        buffer.writeByte(0.toByte().toInt())
+        buffer.writeMCBoolean(true)
 
         return Packet.of(0x02, buffer)
     }

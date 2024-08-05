@@ -7,9 +7,6 @@ import io.github.liyze09.arms.network.PackUtils.writeString
 import io.github.liyze09.arms.network.PackUtils.writeVarInt
 import io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder
 import io.github.liyze09.arms.network.packet.Packet
-import io.github.liyze09.arms.registry.Registries.nbtSerializer
-import kotlinx.serialization.encodeToByteArray
-import net.benwoodworth.knbt.NbtTag
 
 object RegistryDataPacket : ClientBoundPacketEncoder<RegistryData> {
     override fun encode(msg: RegistryData, connection: Connection): Packet {
@@ -20,7 +17,7 @@ object RegistryDataPacket : ClientBoundPacketEncoder<RegistryData> {
             buf.writeString(id.toString())
             if (nbt != null) {
                 buf.writeMCBoolean(true)
-                buf.writeBytes(nbtSerializer.encodeToByteArray(nbt))
+                buf.writeBytes(nbt)
             } else {
                 buf.writeMCBoolean(false)
             }
@@ -29,5 +26,5 @@ object RegistryDataPacket : ClientBoundPacketEncoder<RegistryData> {
     }
 }
 
-data class RegistryData(val id: Identifier, val entries: Map<Identifier, NbtTag?>)
+data class RegistryData(val id: Identifier, val entries: Map<Identifier, ByteArray?>)
 

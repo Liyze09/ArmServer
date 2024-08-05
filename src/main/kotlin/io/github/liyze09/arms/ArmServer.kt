@@ -2,7 +2,8 @@ package io.github.liyze09.arms
 
 import io.github.liyze09.arms.network.NettyInitialize
 import io.github.liyze09.arms.network.NettyInitialize.start
-import io.github.liyze09.arms.network.packet.PacketCodecManager
+import io.github.liyze09.arms.network.packet.PacketCodecManager.registerPackets
+import io.github.liyze09.arms.registry.blockRegistryInit
 import io.netty.channel.Channel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -10,19 +11,20 @@ import java.util.*
 
 object ArmServer {
     private val LOGGER: Logger = LoggerFactory.getLogger("ArmServer")
-    public const val MINECRAFT_VERSION = "1.21"
+    const val MINECRAFT_VERSION = "1.21"
     private lateinit var arguments: Array<String>
     private lateinit var channel: Channel
 
     @JvmStatic
     fun main(args: Array<String>) {
         arguments = args
-        PacketCodecManager.registerPackets()
+        registerPackets()
+        blockRegistryInit()
         Thread.ofVirtual().name("Command").start {
             val scanner = Scanner(System.`in`)
             while (true) {
                 val input = scanner.nextLine()
-                // TODO
+                // TODO: Command 24/08/03
                 if (input.startsWith("stop", true)) {
                     shutdown()
                 }

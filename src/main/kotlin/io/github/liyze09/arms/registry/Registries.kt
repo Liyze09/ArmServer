@@ -4,10 +4,6 @@ import io.github.liyze09.arms.common.Identifier
 import io.github.liyze09.arms.network.Connection
 import io.github.liyze09.arms.network.packet.clientbound.RegistryData
 import io.github.liyze09.arms.network.packet.clientbound.RegistryDataPacket
-import net.benwoodworth.knbt.Nbt
-import net.benwoodworth.knbt.NbtCompression
-import net.benwoodworth.knbt.NbtTag
-import net.benwoodworth.knbt.NbtVariant
 
 object Registries {
     enum class RegistryTypes(val id: Identifier? = null) {
@@ -35,6 +31,19 @@ object Registries {
         WOLF_VARIANT(Identifier("minecraft", "wolf_variant")),
         PAINTING_VARIANT(Identifier("minecraft", "painting_variant"))
     }
+
+    internal val changeable = mutableMapOf<RegistryTypes, MutableMap<Identifier, Registry>>(
+        RegistryTypes.BIOME to mutableMapOf(),
+        RegistryTypes.DAMAGE_TYPE to mutableMapOf(),
+        RegistryTypes.CHAT_TYPE to mutableMapOf(),
+        RegistryTypes.DIMENSION to mutableMapOf(),
+        RegistryTypes.BANNER_PATTERN to mutableMapOf(),
+        RegistryTypes.ARMOR_TRIM_PATTERN to mutableMapOf(),
+        RegistryTypes.ARMOR_TRIM_MATERIAL to mutableMapOf(),
+        RegistryTypes.WOLF_VARIANT to mutableMapOf(),
+        RegistryTypes.PAINTING_VARIANT to mutableMapOf()
+    )
+
 
     internal val registries = mutableMapOf<RegistryTypes, MutableMap<Identifier, Registry>>(
         RegistryTypes.BLOCK to mutableMapOf(),
@@ -67,14 +76,14 @@ object Registries {
     }
 
     abstract class Registry {
-        open fun toNbt(): NbtTag {
+        open fun toNbt(): ByteArray {
             throw UnsupportedOperationException()
         }
     }
 
     fun sendRegistryData(connection: Connection) {
-        registries.forEach { (type, registries) ->
-            if (type.id != null) {
+        changeable.forEach { (type, registries) ->
+            if (type.id != null && registries.isNotEmpty()) {
                 connection.sendPacket(
                     RegistryData(
                         type.id,
@@ -86,10 +95,5 @@ object Registries {
                 )
             }
         }
-    }
-
-    val nbtSerializer = Nbt {
-        variant = NbtVariant.Java
-        compression = NbtCompression.None
     }
 }
