@@ -29,10 +29,11 @@ object PackUtils {
         }
     }
 
-    fun ByteBuf.writeString(msg: String) {
+    fun ByteBuf.writeString(msg: String): ByteBuf {
         val bytes = msg.toByteArray(StandardCharsets.UTF_8)
         this.writeVarInt(bytes.size)
         this.writeBytes(bytes)
+        return this
     }
 
     @Contract("_ -> new")
@@ -66,12 +67,12 @@ object PackUtils {
         return value
     }
 
-    fun ByteBuf.writeVarInt(input: Int) {
+    fun ByteBuf.writeVarInt(input: Int): ByteBuf {
         var value = input
         while (true) {
             if ((value and SEGMENT_BITS.inv()) == 0) {
                 this.writeByte(value.toByte().toInt())
-                return
+                return this
             }
 
             this.writeByte(
@@ -87,8 +88,9 @@ object PackUtils {
         return this.readByte().toInt() != 0
     }
 
-    fun ByteBuf.writeMCBoolean(value: Boolean) {
+    fun ByteBuf.writeMCBoolean(value: Boolean): ByteBuf {
         this.writeByte(if (value) 1 else 0)
+        return this
     }
 
     class VarIntTooBigException : RuntimeException("VarInt is too big or invalid")

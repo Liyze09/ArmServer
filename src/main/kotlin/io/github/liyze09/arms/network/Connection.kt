@@ -97,14 +97,17 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
         this.uuid = uuid
     }
 
-    fun <T> sendPacket(msg: T, encoder: ClientBoundPacketEncoder<T>): ChannelFuture =
-        try {
-            val packet = encoder.encode(msg, this)
-            LOGGER.debug("To {}: {}", this.ctx.name(), packet)
-            this.ctx.writeAndFlush(packet)
-        } catch (e: IOException) {
-            throw RuntimeException(e)
+    fun <T> sendPacket(msg: T, encoder: ClientBoundPacketEncoder<T>) {
+        Thread.ofVirtual().start {
+            try {
+                val packet = encoder.encode(msg, this)
+                LOGGER.debug("To {}: {}", this.ctx.name(), packet)
+                this.ctx.writeAndFlush(packet)
+            } catch (e: IOException) {
+                throw RuntimeException(e)
+            }
         }
+    }
 
 
     override fun equals(other: Any?): Boolean {

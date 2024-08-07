@@ -3,7 +3,9 @@ package io.github.liyze09.arms
 import io.github.liyze09.arms.network.NettyInitialize
 import io.github.liyze09.arms.network.NettyInitialize.start
 import io.github.liyze09.arms.network.packet.PacketCodecManager.registerPackets
+import io.github.liyze09.arms.registry.Registries.vanillaRegistries
 import io.github.liyze09.arms.registry.blockRegistryInit
+import io.github.liyze09.arms.registry.entityRegistryInit
 import io.netty.channel.Channel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -19,7 +21,7 @@ object ArmServer {
     fun main(args: Array<String>) {
         arguments = args
         registerPackets()
-        blockRegistryInit()
+        vanillaRegistries()
         Thread.ofVirtual().name("Command").start {
             val scanner = Scanner(System.`in`)
             while (true) {
@@ -30,6 +32,8 @@ object ArmServer {
                 }
             }
         }
+        blockRegistryInit()
+        entityRegistryInit()
         Thread.ofPlatform().name("Network").start {
             try {
                 channel = start().channel()

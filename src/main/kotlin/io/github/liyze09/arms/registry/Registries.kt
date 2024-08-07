@@ -1,11 +1,19 @@
 package io.github.liyze09.arms.registry
 
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import io.github.liyze09.arms.common.Identifier
 import io.github.liyze09.arms.network.Connection
 import io.github.liyze09.arms.network.packet.clientbound.RegistryData
 import io.github.liyze09.arms.network.packet.clientbound.RegistryDataPacket
+import io.github.liyze09.arms.registry.block.Air
+import io.github.liyze09.arms.registry.block.GrassBlock
 
 object Registries {
+    val jsonRegistries: JsonObject = JsonParser.parseReader(
+        Registries::class.java.getResourceAsStream("/registries/registries.json")
+            ?.bufferedReader() ?: throw RuntimeException("Failed to load blocks.json")
+    ).asJsonObject
     enum class RegistryTypes(val id: Identifier? = null) {
         BLOCK,
         ITEM,
@@ -95,5 +103,10 @@ object Registries {
                 )
             }
         }
+    }
+
+    fun vanillaRegistries() {
+        register(RegistryTypes.BLOCK, Identifier("minecraft", "grass_block"), GrassBlock())
+        register(RegistryTypes.BLOCK, Identifier("minecraft", "air"), Air())
     }
 }

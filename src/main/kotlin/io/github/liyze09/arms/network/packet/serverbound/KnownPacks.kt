@@ -8,7 +8,6 @@ import io.netty.buffer.ByteBuf
 
 object KnownPacks : ServerBoundPacketDecoder {
     override fun decode(buf: ByteBuf, connection: Connection) {
-        buf.clear()
         Registries.sendRegistryData(connection)
         connection.sendPacket(
             null,
