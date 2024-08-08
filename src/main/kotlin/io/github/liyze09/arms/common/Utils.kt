@@ -25,3 +25,8 @@ fun ByteArray.toLong(): Long {
             or ((this[6].toLong() and 0xffL) shl 8)
             or ((this[7].toLong() and 0xffL) shl 0))
 }
+
+@FunctionalInterface
+fun interface OptionalString {
+    override fun toString(): String
+}

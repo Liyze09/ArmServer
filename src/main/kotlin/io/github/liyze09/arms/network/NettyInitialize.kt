@@ -1,6 +1,7 @@
 package io.github.liyze09.arms.network
 
 import io.github.liyze09.arms.Configuration
+import io.github.liyze09.arms.common.OptionalString
 import io.github.liyze09.arms.network.Connection.Companion.getInstance
 import io.github.liyze09.arms.network.PackUtils.readVarInt
 import io.github.liyze09.arms.network.PackUtils.writeVarInt
@@ -60,8 +61,17 @@ object NettyInitialize {
                     pipeline.addLast(object : SimpleChannelInboundHandler<Packet>() {
                         override fun channelRead0(ctx: ChannelHandlerContext, packet: Packet) {
                             val connection = getInstance(ctx)
-                            PacketCodecManager.getServerDecoder(connection.getStatus(), packet.id)
-                                ?.decode(packet.data, connection)
+                            try {
+                                PacketCodecManager.getServerDecoder(connection.getStatus(), packet.id)
+                                    ?.decode(packet.data, connection)
+                            } catch (e: Exception) {
+                                LOGGER.warn("Error while decoding packet {}\n connection: {}\n because: {}",
+                                    packet,
+                                    connection,
+                                    OptionalString { e.stackTraceToString() }
+                                )
+                                ctx.close()
+                            }
                         }
                     })
                 }

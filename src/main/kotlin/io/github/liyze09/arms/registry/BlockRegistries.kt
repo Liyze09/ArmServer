@@ -22,6 +22,8 @@ internal fun blockRegistryInit() {
 abstract class Block(val blockSettings: BlockSettings) : Registries.Registry() {
     abstract fun getStates(): List<BlockState>
     abstract fun getDefaultState(): BlockState
+    open fun beforeBlockActionApply(action: BlockAction): Any? = null
+    open fun duringBlockActionApply(action: BlockAction, msg: Any?) {}
 }
 
 class BlockSettings {
@@ -54,6 +56,25 @@ enum class BlockType {
     AIR,
     SOLID,
     LIQUID,
+}
+
+enum class BlockAction {
+    BREAK,
+    PLACE,
+    INTERACT,
+    STEP_ON,
+    STEP_OFF,
+    FALL,
+    BLOCK_ACTION,
+    BLOCK_UPDATE,
+    EXPLODE,
+    BREAK_ANIMATION,
+    PLACE_ANIMATION,
+    BLOCK_DESTROY_ANIMATION,
+    BLOCK_SYNC,
+    BLOCK_CHANGE,
+    BLOCK_UPDATE_NEIGHBORS,
+    BLOCK_UPDATE_NEIGHBORS_AND_SELF,
 }
 
 abstract class BlockState {

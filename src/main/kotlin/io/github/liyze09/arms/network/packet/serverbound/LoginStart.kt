@@ -9,7 +9,7 @@ import io.netty.buffer.ByteBuf
 
 object LoginStart : ServerBoundPacketDecoder {
     override fun decode(buf: ByteBuf, connection: Connection) {
-        val username = buf.readString()
+        val username = buf.readString(16)
         val uuid = Connection.UUID(buf.readLong(), buf.readLong())
         connection.setUsername(username)
         connection.setUUID(uuid)

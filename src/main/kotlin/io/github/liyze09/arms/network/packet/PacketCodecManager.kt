@@ -58,7 +58,7 @@ object PacketCodecManager {
                 throw IllegalPacketException("Invalid protocol version: $protocolVersion")
             }
             connection.protocolVersion = protocolVersion // Protocol Version
-            buf.readString() // Server Address (unused)
+            buf.readString(255) // Server Address (unused)
             buf.readUnsignedShort() // Server Port (unused)
             when (buf.readVarInt()) {
                 2 -> connection.updateStatus(Connection.Status.LOGIN)

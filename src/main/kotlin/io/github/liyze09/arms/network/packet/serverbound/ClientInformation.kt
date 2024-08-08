@@ -9,7 +9,7 @@ import io.netty.buffer.ByteBuf
 
 object ClientInformation : ServerBoundPacketDecoder {
     override fun decode(buf: ByteBuf, connection: Connection) {
-        connection.updateLocale(buf.readString())
+        connection.updateLocale(buf.readString(16))
         connection.updateViewDistance(buf.readByte())
         connection.updateChatMode(ChatMode.entries.toTypedArray()[buf.readByte().toInt()])
         connection.updateChatColors(buf.readMCBoolean())

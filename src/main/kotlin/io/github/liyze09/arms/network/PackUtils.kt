@@ -1,6 +1,7 @@
 package io.github.liyze09.arms.network
 
 import io.github.liyze09.arms.common.Identifier
+import io.github.liyze09.arms.network.exception.IllegalPacketException
 import io.netty.buffer.ByteBuf
 import org.jetbrains.annotations.Contract
 import java.nio.charset.StandardCharsets
@@ -37,8 +38,9 @@ object PackUtils {
     }
 
     @Contract("_ -> new")
-    fun ByteBuf.readString(): String {
+    fun ByteBuf.readString(maxLength: Int = 32767): String {
         val length = this.readVarInt()
+        if (length > maxLength) throw IllegalPacketException("String length is too big: $length > $maxLength")
 
         val data = ByteArray(length)
         this.readBytes(data)

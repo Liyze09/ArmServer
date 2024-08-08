@@ -97,7 +97,7 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
         this.uuid = uuid
     }
 
-    fun <T> sendPacket(msg: T, encoder: ClientBoundPacketEncoder<T>) {
+    fun <T> sendPacket(msg: T, encoder: ClientBoundPacketEncoder<T>): Connection {
         Thread.ofVirtual().start {
             try {
                 val packet = encoder.encode(msg, this)
@@ -107,6 +107,7 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
                 throw RuntimeException(e)
             }
         }
+        return this
     }
 
 

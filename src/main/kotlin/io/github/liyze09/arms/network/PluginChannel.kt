@@ -24,6 +24,6 @@ object PluginChannel {
 }
 
 @FunctionalInterface
-interface PluginChannelHandler {
+fun interface PluginChannelHandler {
     fun handle(data: ByteBuf)
 }

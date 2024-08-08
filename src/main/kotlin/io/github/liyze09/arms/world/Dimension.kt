@@ -7,14 +7,18 @@ import io.github.liyze09.arms.entity.Entity
 import io.github.liyze09.arms.registry.BlockState
 import io.github.liyze09.arms.registry.blockStatesByProtocolId
 import io.github.liyze09.arms.registry.idByBlockState
+import io.github.liyze09.arms.world.gen.WorldgenProvider
 import java.util.concurrent.ConcurrentHashMap
 
-abstract class Dimension {
+abstract class Dimension(val worldgen: WorldgenProvider) {
     abstract val name: Identifier
     private val chunkMap = ConcurrentHashMap<Position, Chunk>(512)
     val entityMap = ConcurrentHashMap<Position, Entity>(128)
     fun getChunk(position: Position): Chunk {
-        return chunkMap.getOrPut(position) { TODO("worldgen | save loading") }
+        return chunkMap.getOrPut(position) {
+            // TODO Load save
+            worldgen.getChunk(position.x, position.z)
+        }
     }
 
     fun updateBlockState(position: Position, state: BlockState) {
