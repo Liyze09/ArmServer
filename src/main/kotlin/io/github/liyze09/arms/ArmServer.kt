@@ -6,6 +6,7 @@ import io.github.liyze09.arms.network.packet.PacketCodecManager.registerPackets
 import io.github.liyze09.arms.registry.Registries.vanillaRegistries
 import io.github.liyze09.arms.registry.blockRegistryInit
 import io.github.liyze09.arms.registry.entityRegistryInit
+import io.github.liyze09.arms.registry.itemRegistriesInit
 import io.netty.channel.Channel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -33,6 +34,7 @@ object ArmServer {
             }
         }
         blockRegistryInit()
+        itemRegistriesInit()
         entityRegistryInit()
         Thread.ofPlatform().name("Network").start {
             try {

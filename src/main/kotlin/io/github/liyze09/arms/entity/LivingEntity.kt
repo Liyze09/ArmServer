@@ -3,9 +3,10 @@ package io.github.liyze09.arms.entity
 abstract class LivingEntity : Entity() {
     var currentHealth = 20.0F
     var maxHealth = 20.0F
-    fun damage(amount: Float): LivingEntity {
-        maxHealth -= amount
-        if (maxHealth <= 0) {
+    fun decreaseHealth(amount: Float): LivingEntity {
+        currentHealth -= amount
+        if (currentHealth > maxHealth) currentHealth = maxHealth
+        else if (currentHealth <= 0) {
             whenDead()
             currentDimension.entityMap.remove(this.position)
         }

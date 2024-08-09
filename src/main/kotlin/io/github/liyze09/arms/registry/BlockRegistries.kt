@@ -1,16 +1,28 @@
 package io.github.liyze09.arms.registry
 
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
+import io.github.liyze09.arms.common.Identifier
+import io.github.liyze09.arms.common.Position
+import io.github.liyze09.arms.world.Dimension
+
+val gson = Gson()
+
+val blockRegistriesJson: JsonObject = JsonParser.parseReader(
+    Registries::class.java.getResourceAsStream("/registries/blocks.json")
+        ?.bufferedReader() ?: throw RuntimeException("Failed to load blocks.json")
+).asJsonObject
 
 internal fun blockRegistryInit() {
-    // TODO BlockState
     val json = Registries.jsonRegistries
         .getAsJsonObject("minecraft:block")
         .getAsJsonObject("entries")
     Registries.registries[Registries.RegistryTypes.BLOCK]?.forEach { (id, registry) ->
         registry as Block
         registry.getStates().forEach {
-            blockStatesByProtocolId[it.getProtocolId()] = it
-            idByBlockState[it] = it.getProtocolId()
+            blockStatesByProtocolId[it.protocolId] = it
+            idByBlockState[it] = it.protocolId
         }
         json.getAsJsonObject(id.toString()).get("protocol_id").asInt.let {
             blocksByProtocolId[it] = registry
@@ -21,8 +33,8 @@ internal fun blockRegistryInit() {
 
 abstract class Block(val blockSettings: BlockSettings) : Registries.Registry() {
     abstract fun getStates(): List<BlockState>
-    abstract fun getDefaultState(): BlockState
-    open fun beforeBlockActionApply(action: BlockAction): Any? = null
+    abstract fun getDefaultState(): BlockState?
+    open fun beforeBlockActionApply(action: BlockAction, dimension: Dimension, position: Position): Any? = null
     open fun duringBlockActionApply(action: BlockAction, msg: Any?) {}
 }
 
@@ -62,23 +74,41 @@ enum class BlockAction {
     BREAK,
     PLACE,
     INTERACT,
-    STEP_ON,
-    STEP_OFF,
-    FALL,
-    BLOCK_ACTION,
-    BLOCK_UPDATE,
-    EXPLODE,
-    BREAK_ANIMATION,
-    PLACE_ANIMATION,
-    BLOCK_DESTROY_ANIMATION,
-    BLOCK_SYNC,
-    BLOCK_CHANGE,
-    BLOCK_UPDATE_NEIGHBORS,
-    BLOCK_UPDATE_NEIGHBORS_AND_SELF,
+    BLOCK_UPDATE
 }
 
 abstract class BlockState {
-    abstract fun getProtocolId(): Int
+    var protocolId: Int = -1
+}
+
+abstract class AutoBlock(
+    identifier: Identifier,
+    blockSettings: BlockSettings,
+    stateType: Class<out BlockState>,
+    autoRegistry: Boolean = true
+) : Block(blockSettings) {
+    private val states = mutableListOf<BlockState>()
+    private var defaultState: BlockState? = null
+
+    init {
+        blockRegistriesJson
+            .get(identifier.toString()).asJsonObject
+            .get("states").asJsonArray
+            .forEach {
+                it.asJsonObject.let { obj ->
+                    val state = gson.fromJson(obj.get("properties").asJsonObject, stateType)
+                    state.protocolId = obj.get("id").asInt
+                    if (obj.has("default") && obj.get("default").asBoolean) defaultState = state
+                    states.add(state)
+                }
+            }
+        @Suppress("LeakingThis")
+        if (autoRegistry) Registries.register(Registries.RegistryTypes.BLOCK, identifier, this)
+    }
+
+    override fun getDefaultState() = defaultState
+
+    override fun getStates() = states
 }
 
 internal val blocksByProtocolId = mutableMapOf<Int, Block>()
