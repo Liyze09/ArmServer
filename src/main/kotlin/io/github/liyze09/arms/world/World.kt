@@ -5,6 +5,7 @@ import io.github.liyze09.arms.common.Identifier
 import io.github.liyze09.arms.common.Position
 import io.github.liyze09.arms.common.toByteArray
 import io.github.liyze09.arms.common.toLong
+import io.github.liyze09.arms.world.impl.Overworld
 import java.security.MessageDigest
 
 object World {
@@ -13,6 +14,7 @@ object World {
     val hashedSeed: Long
 
     init {
+        dimensions[Identifier("minecraft", "overworld")] = Overworld()
         val messageDigest = MessageDigest.getInstance("SHA-256")
         messageDigest.update(seed.toByteArray())
         hashedSeed = messageDigest.digest().take(8).toByteArray().toLong()

@@ -1,4 +1,6 @@
-package io.github.liyze09.arms.registry
+package io.github.liyze09.arms.registry.item
+
+import io.github.liyze09.arms.registry.Registries
 
 fun itemRegistriesInit() {
     val json = Registries.jsonRegistries
@@ -10,21 +12,6 @@ fun itemRegistriesInit() {
             itemById[it] = registry
             idByItem[registry] = it
         }
-    }
-}
-
-class Item(val settings: ItemSettings) : Registries.Registry() {}
-class ItemSettings {
-    var maxCount: Int = 64
-    var fireproof: Boolean = false
-    fun maxCount(maxStackSize: Int): ItemSettings {
-        this.maxCount = maxStackSize
-        return this
-    }
-
-    fun fireproof(fireproof: Boolean): ItemSettings {
-        this.fireproof = fireproof
-        return this
     }
 }
 

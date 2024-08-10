@@ -17,4 +17,8 @@ class Identifier(val namespace: String, val path: String) {
     }
 
     override fun hashCode(): Int = namespace.hashCode() + path.hashCode()
+
+    companion object {
+        internal fun mc(path: String) = Identifier("minecraft", path)
+    }
 }

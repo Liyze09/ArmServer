@@ -1,16 +1,18 @@
 package io.github.liyze09.arms.world
 
-import io.github.liyze09.arms.api.event.EventRelater
 import io.github.liyze09.arms.common.Identifier
 import io.github.liyze09.arms.common.Position
 import io.github.liyze09.arms.entity.Entity
-import io.github.liyze09.arms.registry.BlockState
-import io.github.liyze09.arms.registry.blockStatesByProtocolId
-import io.github.liyze09.arms.registry.idByBlockState
+import io.github.liyze09.arms.registry.DimensionType
+import io.github.liyze09.arms.registry.block.BlockState
+import io.github.liyze09.arms.registry.block.blockStatesByProtocolId
+import io.github.liyze09.arms.registry.block.idByBlockState
 import io.github.liyze09.arms.world.gen.WorldgenProvider
+import net.minecraftarm.api.event.EventRelater
 import java.util.concurrent.ConcurrentHashMap
 
 abstract class Dimension(val worldgen: WorldgenProvider) {
+    abstract val dimensionType: DimensionType
     abstract val name: Identifier
     private val chunkMap = ConcurrentHashMap<Position, Chunk>(512)
     val entityMap = ConcurrentHashMap<Position, Entity>(128)

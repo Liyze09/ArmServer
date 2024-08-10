@@ -1,8 +1,8 @@
 package io.github.liyze09.arms.block
 
-import io.github.liyze09.arms.registry.Block
-import io.github.liyze09.arms.registry.BlockSettings
-import io.github.liyze09.arms.registry.BlockState
+import io.github.liyze09.arms.registry.block.Block
+import io.github.liyze09.arms.registry.block.BlockSettings
+import io.github.liyze09.arms.registry.block.BlockState
 
 class GrassBlock : Block(BlockSettings().strength(0.6F)) {
     private val states = listOf(GrassBlockState(false), GrassBlockState(true))

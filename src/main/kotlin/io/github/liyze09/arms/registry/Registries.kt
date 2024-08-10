@@ -5,9 +5,12 @@ import com.google.gson.JsonParser
 import io.github.liyze09.arms.block.Air
 import io.github.liyze09.arms.block.GrassBlock
 import io.github.liyze09.arms.common.Identifier
+import io.github.liyze09.arms.common.Identifier.Companion.mc
 import io.github.liyze09.arms.network.Connection
 import io.github.liyze09.arms.network.packet.clientbound.RegistryData
 import io.github.liyze09.arms.network.packet.clientbound.RegistryDataPacket
+import io.github.liyze09.arms.world.impl.Overworld
+import net.minecraftarm.api.nbt.NbtCompound
 
 object Registries {
     val jsonRegistries: JsonObject = JsonParser.parseReader(
@@ -41,19 +44,6 @@ object Registries {
         PAINTING_VARIANT(Identifier("minecraft", "painting_variant"))
     }
 
-    internal val changeable = mutableMapOf<RegistryTypes, MutableMap<Identifier, Registry>>(
-        RegistryTypes.BIOME to mutableMapOf(),
-        RegistryTypes.DAMAGE_TYPE to mutableMapOf(),
-        RegistryTypes.CHAT_TYPE to mutableMapOf(),
-        RegistryTypes.DIMENSION to mutableMapOf(),
-        RegistryTypes.BANNER_PATTERN to mutableMapOf(),
-        RegistryTypes.ARMOR_TRIM_PATTERN to mutableMapOf(),
-        RegistryTypes.ARMOR_TRIM_MATERIAL to mutableMapOf(),
-        RegistryTypes.WOLF_VARIANT to mutableMapOf(),
-        RegistryTypes.PAINTING_VARIANT to mutableMapOf()
-    )
-
-
     internal val registries = mutableMapOf<RegistryTypes, MutableMap<Identifier, Registry>>(
         RegistryTypes.BLOCK to mutableMapOf(),
         RegistryTypes.ITEM to mutableMapOf(),
@@ -83,15 +73,20 @@ object Registries {
     fun register(type: RegistryTypes, name: Identifier, obj: Registry) {
         registries[type]!![name] = obj
     }
+    fun register(type: RegistryTypes, vararg registries: Pair<Identifier, Registry>) {
+        registries.forEach { (name, registry) ->
+            register(type, name, registry)
+        }
+    }
 
-    abstract class Registry {
-        open fun toNbt(): ByteArray {
+    interface Registry {
+        fun toNbt(): NbtCompound {
             throw UnsupportedOperationException()
         }
     }
 
     fun sendRegistryData(connection: Connection) {
-        changeable.forEach { (type, registries) ->
+        registries.forEach { (type, registries) ->
             if (type.id != null && registries.isNotEmpty()) {
                 connection.sendPacket(
                     RegistryData(
@@ -107,7 +102,30 @@ object Registries {
     }
 
     fun vanillaRegistries() {
-        register(RegistryTypes.BLOCK, Identifier("minecraft", "grass_block"), GrassBlock())
-        register(RegistryTypes.BLOCK, Identifier("minecraft", "air"), Air())
+        register(RegistryTypes.BLOCK, mc("grass_block"), GrassBlock())
+        register(RegistryTypes.BLOCK, mc("air"), Air())
+        register(RegistryTypes.DIMENSION, mc("overworld"), Overworld.overworld)
+        register(
+            RegistryTypes.WOLF_VARIANT,
+            mc("ashen") to WolfVariant.ASHEN,
+            mc("black") to WolfVariant.BLACK,
+            mc("chestnut") to WolfVariant.CHESTNUT,
+            mc("pale") to WolfVariant.PALE,
+            mc("rusty") to WolfVariant.RUSTY,
+            mc("snowy") to WolfVariant.SNOWY,
+            mc("spotted") to WolfVariant.SPOTTED,
+            mc("striped") to WolfVariant.STRIPED,
+            mc("woods") to WolfVariant.WOODS,
+        )
+        register(
+            RegistryTypes.PAINTING_VARIANT,
+            mc("fern") to PaintVariant(
+                mc("fern"), 4, 3
+            ),
+            mc("backyard") to PaintVariant(
+                mc("backyard"), 4, 3
+            )
+            // TODO More vanilla paintings
+        )
     }
 }

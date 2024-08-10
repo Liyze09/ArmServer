@@ -2,11 +2,9 @@ package io.github.liyze09.arms.network
 
 import io.github.liyze09.arms.Configuration
 import io.github.liyze09.arms.common.Identifier
+import io.github.liyze09.arms.common.TeleportBody
 import io.github.liyze09.arms.entity.Player
-import io.github.liyze09.arms.network.packet.clientbound.ChangeDifficulty
-import io.github.liyze09.arms.network.packet.clientbound.EntityEvent
-import io.github.liyze09.arms.network.packet.clientbound.PlayLogin
-import io.github.liyze09.arms.network.packet.clientbound.SetHeldItem
+import io.github.liyze09.arms.network.packet.clientbound.*
 import io.github.liyze09.arms.world.World
 
 object NetworkWorld {
@@ -20,7 +18,13 @@ object NetworkWorld {
             .sendPacket(Configuration.instance.difficulty, ChangeDifficulty)
             .sendPacket(ret.heldItem, SetHeldItem)
             .sendPacket(Pair(ret.entityId, 24/*TODO op level*/), EntityEvent)
-        // TODO 24/08/08
+            .sendPacket(
+                TeleportBody(position.x.toDouble(), position.y.toDouble(), position.z.toDouble(), 0F, 0F),
+                SynchronizePlayerPosition
+            )
+
+        // TODO Recipe Book / Recipes
+        // TODO 24/08/09
         return ret
     }
 }

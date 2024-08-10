@@ -98,18 +98,18 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
     }
 
     fun <T> sendPacket(msg: T, encoder: ClientBoundPacketEncoder<T>): Connection {
-        Thread.ofVirtual().start {
-            try {
-                val packet = encoder.encode(msg, this)
-                LOGGER.debug("To {}: {}", this.ctx.name(), packet)
-                this.ctx.writeAndFlush(packet)
-            } catch (e: IOException) {
-                throw RuntimeException(e)
-            }
+        try {
+            val packet = encoder.encode(msg, this)
+            LOGGER.debug("To {}: {}", this.ctx.name(), packet)
+            this.ctx.writeAndFlush(packet)
+        } catch (e: IOException) {
+            throw RuntimeException(e)
         }
         return this
     }
 
+    @Volatile
+    var teleporting = -1
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

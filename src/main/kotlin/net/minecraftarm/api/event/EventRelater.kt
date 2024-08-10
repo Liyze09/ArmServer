@@ -1,6 +1,6 @@
 @file:JvmName("EventRelater")
 
-package io.github.liyze09.arms.api.event
+package net.minecraftarm.api.event
 
 import java.util.concurrent.locks.ReentrantReadWriteLock
 

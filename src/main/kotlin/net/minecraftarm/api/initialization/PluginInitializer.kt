@@ -1,4 +1,4 @@
-package io.github.liyze09.arms.api.initialization
+package net.minecraftarm.api.initialization
 
 interface PluginInitializer {
     fun onInitialize() {}

@@ -21,7 +21,7 @@ dependencies {
     implementation 'io.netty:netty-transport:4.1.112.Final'
     // https://mvnrepository.com/artifact/io.netty/netty-codec
     implementation 'io.netty:netty-codec:4.1.112.Final'
-    // https://mvnrepository.com/artifact/io.netty/netty-handler
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation 'com.google.code.gson:gson:2.11.0'
     compileOnly 'org.jetbrains:annotations:24.0.0'
 }
