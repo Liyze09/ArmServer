@@ -4,10 +4,9 @@ import io.github.liyze09.arms.network.Connection
 import io.github.liyze09.arms.network.Connection.*
 import io.github.liyze09.arms.network.PackUtils.readMCBoolean
 import io.github.liyze09.arms.network.PackUtils.readString
-import io.github.liyze09.arms.network.packet.ServerBoundPacketDecoder
 import io.netty.buffer.ByteBuf
 
-object ClientInformation : ServerBoundPacketDecoder {
+object ClientInformation : io.github.liyze09.arms.network.packet.ServerBoundPacketDecoder {
     override fun decode(buf: ByteBuf, connection: Connection) {
         connection.updateLocale(buf.readString(16))
         connection.updateViewDistance(buf.readByte())

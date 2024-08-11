@@ -1,7 +1,6 @@
 package io.github.liyze09.arms.network
 
 import io.github.liyze09.arms.network.NettyInitialize.LOGGER
-import io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder
 import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelHandlerContext
 import org.jetbrains.annotations.Contract
@@ -97,7 +96,7 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
         this.uuid = uuid
     }
 
-    fun <T> sendPacket(msg: T, encoder: ClientBoundPacketEncoder<T>): Connection {
+    fun <T> sendPacket(msg: T, encoder: io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder<T>): Connection {
         try {
             val packet = encoder.encode(msg, this)
             LOGGER.debug("To {}: {}", this.ctx.name(), packet)

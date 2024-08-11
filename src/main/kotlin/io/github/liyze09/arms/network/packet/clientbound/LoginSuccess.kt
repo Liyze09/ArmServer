@@ -3,10 +3,9 @@ package io.github.liyze09.arms.network.packet.clientbound
 import io.github.liyze09.arms.network.Connection
 import io.github.liyze09.arms.network.PackUtils.writeMCBoolean
 import io.github.liyze09.arms.network.PackUtils.writeVarInt
-import io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder
 import io.github.liyze09.arms.network.packet.Packet
 
-object LoginSuccess : ClientBoundPacketEncoder<LoginSuccessBody> {
+object LoginSuccess : io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder<LoginSuccessBody> {
     override fun encode(msg: LoginSuccessBody, connection: Connection): Packet {
         val buffer = connection.ctx.alloc().buffer()
         // UUID

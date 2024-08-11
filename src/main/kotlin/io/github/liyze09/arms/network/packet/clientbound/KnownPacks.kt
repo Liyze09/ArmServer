@@ -4,10 +4,9 @@ import io.github.liyze09.arms.ArmServer.MINECRAFT_VERSION
 import io.github.liyze09.arms.network.Connection
 import io.github.liyze09.arms.network.PackUtils.writeString
 import io.github.liyze09.arms.network.PackUtils.writeVarInt
-import io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder
 import io.github.liyze09.arms.network.packet.Packet
 
-object KnownPacks : ClientBoundPacketEncoder<Any?> {
+object KnownPacks : io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder<Any?> {
     override fun encode(msg: Any?, connection: Connection): Packet {
         val buf = connection.ctx.alloc().buffer()
         buf.writeVarInt(1)

@@ -1,11 +1,11 @@
 package io.github.liyze09.arms.network
 
 import io.github.liyze09.arms.Configuration
-import io.github.liyze09.arms.common.Identifier
-import io.github.liyze09.arms.common.TeleportBody
-import io.github.liyze09.arms.entity.Player
-import io.github.liyze09.arms.network.packet.clientbound.*
-import io.github.liyze09.arms.world.World
+import io.github.liyze09.arms.network.packet.clientbound.SynchronizePlayerPosition
+import net.minecraftarm.common.Identifier
+import net.minecraftarm.common.TeleportBody
+import net.minecraftarm.entity.Player
+import net.minecraftarm.world.World
 
 object NetworkWorld {
     fun newPlayer(connection: Connection): Player {
@@ -14,10 +14,16 @@ object NetworkWorld {
         val currentDimension = World.getDimension(Identifier("minecraft", "overworld"))
         val position = World.getWorldSpawnPoint()
         ret.loadToWorld(currentDimension, position)
-        connection.sendPacket(ret, PlayLogin)
-            .sendPacket(Configuration.instance.difficulty, ChangeDifficulty)
-            .sendPacket(ret.heldItem, SetHeldItem)
-            .sendPacket(Pair(ret.entityId, 24/*TODO op level*/), EntityEvent)
+        connection.sendPacket(ret, io.github.liyze09.arms.network.packet.clientbound.PlayLogin)
+            .sendPacket(
+                Configuration.instance.difficulty,
+                io.github.liyze09.arms.network.packet.clientbound.ChangeDifficulty
+            )
+            .sendPacket(ret.heldItem, io.github.liyze09.arms.network.packet.clientbound.SetHeldItem)
+            .sendPacket(
+                Pair(ret.entityId, 24/*TODO op level*/),
+                io.github.liyze09.arms.network.packet.clientbound.EntityEvent
+            )
             .sendPacket(
                 TeleportBody(position.x.toDouble(), position.y.toDouble(), position.z.toDouble(), 0F, 0F),
                 SynchronizePlayerPosition

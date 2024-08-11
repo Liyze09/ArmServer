@@ -5,29 +5,39 @@ import io.github.liyze09.arms.network.NettyInitialize
 import io.github.liyze09.arms.network.PackUtils
 import io.github.liyze09.arms.network.PackUtils.readString
 import io.github.liyze09.arms.network.PackUtils.readVarInt
-import io.github.liyze09.arms.network.exception.IllegalPacketException
 import io.github.liyze09.arms.network.packet.serverbound.*
 import io.netty.buffer.ByteBuf
 import org.jetbrains.annotations.Contract
 import java.util.concurrent.ConcurrentHashMap
 
 object PacketCodecManager {
-    private fun registerServerBoundPacket(type: Connection.Status, id: Int, decoder: ServerBoundPacketDecoder) {
+    private fun registerServerBoundPacket(
+        type: Connection.Status,
+        id: Int,
+        decoder: ServerBoundPacketDecoder
+    ) {
         getServerMap(type)[id] = decoder
     }
 
 
-    fun getServerDecoder(type: Connection.Status, id: Int): ServerBoundPacketDecoder? {
+    fun getServerDecoder(
+        type: Connection.Status,
+        id: Int
+    ): ServerBoundPacketDecoder? {
         if (type == Connection.Status.HANDSHAKE) {
             return handshakeHandler
         }
         return getServerMap(type)[id]
     }
 
-    private val serverLogin: MutableMap<Int, ServerBoundPacketDecoder> = ConcurrentHashMap()
-    private val serverConfiguration: MutableMap<Int, ServerBoundPacketDecoder> = ConcurrentHashMap()
-    private val serverPlay: MutableMap<Int, ServerBoundPacketDecoder> = ConcurrentHashMap()
-    private val serverStatus: MutableMap<Int, ServerBoundPacketDecoder> = ConcurrentHashMap()
+    private val serverLogin: MutableMap<Int, ServerBoundPacketDecoder> =
+        ConcurrentHashMap()
+    private val serverConfiguration: MutableMap<Int, ServerBoundPacketDecoder> =
+        ConcurrentHashMap()
+    private val serverPlay: MutableMap<Int, ServerBoundPacketDecoder> =
+        ConcurrentHashMap()
+    private val serverStatus: MutableMap<Int, ServerBoundPacketDecoder> =
+        ConcurrentHashMap()
 
     @Contract(pure = true)
     private fun getServerMap(type: Connection.Status): MutableMap<Int, ServerBoundPacketDecoder> {
@@ -41,11 +51,17 @@ object PacketCodecManager {
     }
 
     fun registerPackets() {
-        registerServerBoundPacket(Connection.Status.LOGIN, 0x00, LoginStart)
+        registerServerBoundPacket(
+            Connection.Status.LOGIN, 0x00,
+            LoginStart
+        )
         registerServerBoundPacket(Connection.Status.LOGIN, 0x03, LoginAcknowledged)
         registerServerBoundPacket(Connection.Status.CONFIGURATION, 0x00, ClientInformation)
         registerServerBoundPacket(Connection.Status.CONFIGURATION, 0x02, PluginMessage)
-        registerServerBoundPacket(Connection.Status.CONFIGURATION, 0x03, AcknowledgeFinishConfiguration)
+        registerServerBoundPacket(
+            Connection.Status.CONFIGURATION, 0x03,
+            AcknowledgeFinishConfiguration
+        )
         registerServerBoundPacket(Connection.Status.CONFIGURATION, 0x07, KnownPacks)
         registerServerBoundPacket(Connection.Status.PLAY, 0x12, PluginMessage)
         registerServerBoundPacket(Connection.Status.PLAY, 0x00, ConfirmTeleportation)
@@ -56,7 +72,7 @@ object PacketCodecManager {
         ServerBoundPacketDecoder { buf: ByteBuf, connection: Connection ->
             val protocolVersion = buf.readVarInt()
             if (!PackUtils.checkProtocolVersion(protocolVersion, NettyInitialize.MIN_PROTOCOL_VERSION)) {
-                throw IllegalPacketException("Invalid protocol version: $protocolVersion")
+                throw io.github.liyze09.arms.network.exception.IllegalPacketException("Invalid protocol version: $protocolVersion")
             }
             connection.protocolVersion = protocolVersion // Protocol Version
             buf.readString(255) // Server Address (unused)
@@ -64,7 +80,7 @@ object PacketCodecManager {
             when (buf.readVarInt()) {
                 2 -> connection.updateStatus(Connection.Status.LOGIN)
                 1 -> connection.updateStatus(Connection.Status.STATUS)
-                else -> throw IllegalPacketException("Invalid next state of handshake packet")
+                else -> throw io.github.liyze09.arms.network.exception.IllegalPacketException("Invalid next state of handshake packet")
             }
         }
 }

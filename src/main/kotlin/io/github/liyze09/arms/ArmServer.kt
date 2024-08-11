@@ -3,11 +3,11 @@ package io.github.liyze09.arms
 import io.github.liyze09.arms.network.NettyInitialize
 import io.github.liyze09.arms.network.NettyInitialize.start
 import io.github.liyze09.arms.network.packet.PacketCodecManager.registerPackets
-import io.github.liyze09.arms.registry.Registries.vanillaRegistries
-import io.github.liyze09.arms.registry.block.blockRegistryInit
-import io.github.liyze09.arms.registry.entityRegistryInit
-import io.github.liyze09.arms.registry.item.itemRegistriesInit
 import io.netty.channel.Channel
+import net.minecraftarm.registry.Registries.vanillaRegistries
+import net.minecraftarm.registry.block.blockRegistryInit
+import net.minecraftarm.registry.entityRegistryInit
+import net.minecraftarm.registry.item.itemRegistriesInit
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*

@@ -1,7 +1,6 @@
 package io.github.liyze09.arms.network
 
 import io.github.liyze09.arms.Configuration
-import io.github.liyze09.arms.common.OptionalString
 import io.github.liyze09.arms.network.Connection.Companion.getInstance
 import io.github.liyze09.arms.network.PackUtils.readVarInt
 import io.github.liyze09.arms.network.PackUtils.writeVarInt
@@ -13,6 +12,7 @@ import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.ByteToMessageCodec
+import net.minecraftarm.common.OptionalString
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

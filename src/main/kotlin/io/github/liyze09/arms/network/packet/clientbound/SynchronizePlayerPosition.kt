@@ -1,12 +1,12 @@
 package io.github.liyze09.arms.network.packet.clientbound
 
-import io.github.liyze09.arms.common.TeleportBody
 import io.github.liyze09.arms.network.Connection
 import io.github.liyze09.arms.network.PackUtils.writeVarInt
-import io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder
 import io.github.liyze09.arms.network.packet.Packet
+import net.minecraftarm.common.TeleportBody
 
-object SynchronizePlayerPosition : ClientBoundPacketEncoder<TeleportBody> {
+object SynchronizePlayerPosition :
+    io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder<TeleportBody> {
     override fun encode(msg: TeleportBody, connection: Connection): Packet {
         connection.teleporting = msg.id
         val buf = connection.ctx.alloc().ioBuffer()

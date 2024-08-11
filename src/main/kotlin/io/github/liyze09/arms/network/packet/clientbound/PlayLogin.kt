@@ -1,16 +1,15 @@
 package io.github.liyze09.arms.network.packet.clientbound
 
 import io.github.liyze09.arms.Configuration
-import io.github.liyze09.arms.entity.Player
 import io.github.liyze09.arms.network.Connection
 import io.github.liyze09.arms.network.PackUtils.writeMCBoolean
 import io.github.liyze09.arms.network.PackUtils.writeString
 import io.github.liyze09.arms.network.PackUtils.writeVarInt
-import io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder
 import io.github.liyze09.arms.network.packet.Packet
-import io.github.liyze09.arms.world.World
+import net.minecraftarm.entity.Player
+import net.minecraftarm.world.World
 
-object PlayLogin : ClientBoundPacketEncoder<Player> {
+object PlayLogin : io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder<Player> {
     override fun encode(msg: Player, connection: Connection): Packet {
         val buf = connection.ctx.alloc().buffer()
         buf.writeInt(msg.entityId)
