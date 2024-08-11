@@ -5,7 +5,6 @@ import net.minecraftarm.common.Identifier.Companion.mc
 import net.minecraftarm.nbt.NbtArray
 import net.minecraftarm.nbt.NbtCompound
 import net.minecraftarm.nbt.NbtString
-import net.minecraftarm.nbt.NbtTag
 
 class WolfVariant(
     val wildTexture: Identifier,
@@ -18,8 +17,8 @@ class WolfVariant(
         "tame_texture" to NbtString(tameTexture),
         "angry_texture" to NbtString(angryTexture),
         // TODO: biomes
-        "biomes" to /* if (biomes.size == 1) NbtString(biomes[0])
-        else NbtArray(biomes.map { NbtString(it) })*/ NbtArray<NbtString>(NbtTag.NbtType.STRING)
+        "biomes" to if (biomes.size == 1) NbtString(biomes[0])
+        else NbtArray(biomes.map { NbtString(it) })
     )
 
     companion object {

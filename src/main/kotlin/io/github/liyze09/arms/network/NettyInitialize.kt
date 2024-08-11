@@ -12,7 +12,6 @@ import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.ByteToMessageCodec
-import net.minecraftarm.common.OptionalString
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -53,7 +52,7 @@ object NettyInitialize {
                                 val id = byteBuf.readVarInt()
                                 val data = byteBuf.readBytes(length - PackUtils.getVarIntLength(id))
                                 val packet = Packet(length, id, data)
-                                LOGGER.debug("{}: {}", channelHandlerContext.name(), packet)
+                                LOGGER.trace("{}: {}", channelHandlerContext.name(), packet)
                                 list.add(packet)
                             }
                         }
@@ -65,12 +64,15 @@ object NettyInitialize {
                                 PacketCodecManager.getServerDecoder(connection.getStatus(), packet.id)
                                     ?.decode(packet.data, connection)
                             } catch (e: Exception) {
-                                LOGGER.warn("Error while decoding packet {}\n connection: {}\n because: {}",
+                                LOGGER.warn(
+                                    "Error while decoding packet {}\n Connection: {}\n Cause by: {}",
                                     packet,
                                     connection,
-                                    OptionalString { e.stackTraceToString() }
+                                    e.stackTraceToString()
                                 )
                                 ctx.close()
+                            } finally {
+                                packet.data.release()
                             }
                         }
                     })

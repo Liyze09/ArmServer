@@ -99,7 +99,7 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
     fun <T> sendPacket(msg: T, encoder: io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder<T>): Connection {
         try {
             val packet = encoder.encode(msg, this)
-            LOGGER.debug("To {}: {}", this.ctx.name(), packet)
+            LOGGER.trace("To {}: {}", this.ctx.name(), packet)
             this.ctx.writeAndFlush(packet)
         } catch (e: IOException) {
             throw RuntimeException(e)
