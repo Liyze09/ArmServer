@@ -26,10 +26,9 @@ class DamageType(
     }
 
     companion object {
-        lateinit var damageTypes: Map<Identifier, DamageType>
-
+        val damageTypes: Map<Identifier, DamageType> = mutableMapOf()
         init {
-            val damageTypes = mutableMapOf<Identifier, DamageType>()
+            damageTypes as MutableMap<Identifier, DamageType>
             JsonParser.parseReader(
                 DamageType::class.java
                     .getResourceAsStream("/registries/damage_types.json")
@@ -44,7 +43,6 @@ class DamageType(
                     value.get("scaling").asString
                 )
             }
-            Companion.damageTypes = damageTypes
         }
     }
 }

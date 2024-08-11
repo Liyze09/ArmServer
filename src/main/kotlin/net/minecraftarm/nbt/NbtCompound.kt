@@ -6,6 +6,7 @@ import net.minecraftarm.common.Identifier
 class NbtCompound(
     vararg val tags: Pair<String, NbtTag>
 ) : NbtTag {
+    constructor(map: Map<String, NbtTag>) : this(*map.map { it.key to it.value }.toTypedArray())
     override val typeID: Byte
         get() = 10
 

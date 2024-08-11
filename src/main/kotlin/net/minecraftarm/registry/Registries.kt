@@ -10,6 +10,7 @@ import net.minecraftarm.block.GrassBlock
 import net.minecraftarm.common.Identifier
 import net.minecraftarm.common.Identifier.Companion.mc
 import net.minecraftarm.nbt.NbtCompound
+import net.minecraftarm.world.gen.Biome
 import net.minecraftarm.world.impl.Overworld
 
 object Registries {
@@ -134,6 +135,10 @@ object Registries {
             RegistryTypes.DIMENSION,
             mc("overworld"),
             Overworld.overworld
+        )
+        register(
+            RegistryTypes.BIOME,
+            Biome.biomes
         )
         register(
             RegistryTypes.WOLF_VARIANT,
