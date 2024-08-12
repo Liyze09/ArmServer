@@ -5,8 +5,7 @@ import net.minecraftarm.world.gen.WorldgenProvider
 
 object ArmWorldgen : WorldgenProvider {
     // TODO Normal Worldgen
-    override fun getChunk(x: Int, z: Int): Chunk {
-        val chunk = Chunk()
+    override fun genChunk(x: Int, z: Int, chunk: Chunk): Chunk {
         repeat(16) { cx ->
             repeat(16) { cz ->
                 chunk.setBlockStateIDByChunkPosition(

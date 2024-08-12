@@ -9,6 +9,5 @@ object ConfirmTeleportation : io.github.liyze09.arms.network.packet.ServerBoundP
         if (buf.readVarInt() == connection.teleporting) {
             connection.teleporting = -1
         }
-        println("1")
     }
 }

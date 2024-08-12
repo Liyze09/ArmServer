@@ -3,12 +3,26 @@ package io.github.liyze09.arms.network
 import io.github.liyze09.arms.network.NettyInitialize.LOGGER
 import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelHandlerContext
+import net.minecraftarm.common.UUID
+import net.minecraftarm.entity.Player
 import org.jetbrains.annotations.Contract
 import java.io.IOException
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
+    var boundedPlayerEntity: Player? = null
+        get() {
+            if (field == null) {
+                throw IllegalStateException("Player entity not bound yet")
+            }
+            return field!!
+        }
+        set(value) {
+            if (field != null) {
+                throw IllegalStateException("Player entity already bound")
+            }
+            field = checkNotNull(value)
+        }
     @Synchronized
     fun updateStatus(status: Status) {
         this.status = status
@@ -20,7 +34,6 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
     }
 
     fun updateMainHand(mainHand: MainHand) {
-        Objects.requireNonNull(mainHand)
         this.mainHand = mainHand
     }
 
@@ -34,7 +47,6 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
     }
 
     fun updateDisplayedSkinParts(displayedSkinParts: DisplayedSkinParts) {
-        Objects.requireNonNull(displayedSkinParts)
         this.displayedSkinParts = displayedSkinParts
     }
 
@@ -146,11 +158,6 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
         STATUS
     }
 
-    @JvmRecord
-    data class UUID(val a: Long, val b: Long) {
-        override fun toString(): String = String.format("%016x%016x", a, b)
-    }
-
     enum class ChatMode {
         ENABLED,
         COMMANDS_ONLY,
@@ -195,7 +202,6 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
 
         @JvmStatic
         fun getInstance(session: ChannelHandlerContext): Connection {
-            Objects.requireNonNull(session)
             var connection = connections[session]
             if (connection == null) {
                 connection = addConnection(session)

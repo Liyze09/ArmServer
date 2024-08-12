@@ -124,12 +124,12 @@ object Registries {
         register(
             RegistryTypes.BLOCK,
             mc("grass_block"),
-            GrassBlock()
+            GrassBlock
         )
         register(
             RegistryTypes.BLOCK,
             mc("air"),
-            Air()
+            Air
         )
         register(
             RegistryTypes.DIMENSION,

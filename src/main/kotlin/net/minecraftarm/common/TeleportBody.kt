@@ -2,7 +2,7 @@ package net.minecraftarm.common
 
 import java.util.concurrent.ThreadLocalRandom
 
-class TeleportBody(
+data class TeleportBody(
     val x: Double,
     val y: Double,
     val z: Double,
@@ -10,5 +10,11 @@ class TeleportBody(
     val pitch: Float,
     var id: Int = ThreadLocalRandom.current().nextInt(0, 16383),
 ) {
-
+    constructor(entityPosition: EntityPosition) : this(
+        entityPosition.x,
+        entityPosition.y,
+        entityPosition.z,
+        entityPosition.yaw,
+        entityPosition.pitch
+    )
 }

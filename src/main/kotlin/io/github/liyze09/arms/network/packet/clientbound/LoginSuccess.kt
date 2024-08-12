@@ -4,6 +4,7 @@ import io.github.liyze09.arms.network.Connection
 import io.github.liyze09.arms.network.PackUtils.writeMCBoolean
 import io.github.liyze09.arms.network.PackUtils.writeVarInt
 import io.github.liyze09.arms.network.packet.Packet
+import net.minecraftarm.common.UUID
 
 object LoginSuccess : io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder<LoginSuccessBody> {
     override fun encode(msg: LoginSuccessBody, connection: Connection): Packet {
@@ -27,6 +28,6 @@ object LoginSuccess : io.github.liyze09.arms.network.packet.ClientBoundPacketEnc
 
 @JvmRecord
 data class LoginSuccessBody(
-    val uuid: Connection.UUID,
+    val uuid: UUID,
     val username: String
 )

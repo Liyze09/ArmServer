@@ -8,7 +8,7 @@ abstract class LivingEntity : Entity() {
         if (currentHealth > maxHealth) currentHealth = maxHealth
         else if (currentHealth <= 0) {
             whenDead()
-            currentDimension.entityMap.remove(this.position)
+            currentDimension.entities.remove(this.entityId)
         }
         return this
     }

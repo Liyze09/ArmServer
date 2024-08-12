@@ -1,19 +1,23 @@
 package net.minecraftarm.entity
 
-import io.github.liyze09.arms.network.Connection
-import net.minecraftarm.common.Position
+import net.minecraftarm.common.EntityPosition
+import net.minecraftarm.common.UUID
 import net.minecraftarm.registry.Registries
 import net.minecraftarm.world.Dimension
-import java.util.concurrent.ThreadLocalRandom
+import java.util.concurrent.atomic.AtomicInteger
 
 abstract class Entity : Registries.Registry {
-    val entityId = ThreadLocalRandom.current().nextInt(Int.MIN_VALUE, Int.MAX_VALUE)
-    abstract val uuid: Connection.UUID
+    val entityId = publicId.addAndGet(1)
+    abstract val uuid: UUID
     lateinit var currentDimension: Dimension
-    lateinit var position: Position
-    fun loadToWorld(dimension: Dimension, position: Position) {
+    lateinit var position: EntityPosition
+    fun loadToWorld(dimension: Dimension, position: EntityPosition) {
         this.currentDimension = dimension
         this.position = position
-        dimension.entityMap[position] = this
+        dimension.entities[entityId] = this
+    }
+
+    companion object {
+        val publicId: AtomicInteger = AtomicInteger(0)
     }
 }

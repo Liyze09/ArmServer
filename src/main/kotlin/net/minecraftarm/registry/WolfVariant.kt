@@ -16,7 +16,6 @@ class WolfVariant(
         "wild_texture" to NbtString(wildTexture),
         "tame_texture" to NbtString(tameTexture),
         "angry_texture" to NbtString(angryTexture),
-        // TODO: biomes
         "biomes" to if (biomes.size == 1) NbtString(biomes[0])
         else NbtArray(biomes.map { NbtString(it) })
     )
