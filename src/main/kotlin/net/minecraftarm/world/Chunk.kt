@@ -1,5 +1,6 @@
 package net.minecraftarm.world
 
+import net.minecraftarm.common.toYZX
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class Chunk(
@@ -44,11 +45,6 @@ class Chunk(
         fun getBlockState(x: Int, y: Int, z: Int) = blocks[toYZX(x, y, z)]
         fun setBlockState(x: Int, y: Int, z: Int, state: Int) {
             blocks[toYZX(x, y, z)] = state
-        }
-
-        companion object {
-            @JvmStatic
-            fun toYZX(x: Int, y: Int, z: Int) = y shl 8 or (z shl 4) or x
         }
     }
 }

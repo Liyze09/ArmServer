@@ -10,8 +10,10 @@ import net.minecraftarm.world.impl.Overworld
 import java.security.MessageDigest
 import java.util.*
 import java.util.concurrent.*
+import java.util.concurrent.atomic.AtomicInteger
 
 object World {
+    var mspt = 0
     val dimensions = mutableMapOf<Identifier, Dimension>()
     val seed = Configuration.instance.seed
     val hashedSeed: Long
@@ -31,8 +33,9 @@ object World {
 
     fun tick() {
         exchangeBlockUpdatesQueue()
+        val time0 = System.currentTimeMillis()
         val tasks = LinkedList<BlockUpdateTask>()
-        val latch0 = CountDownLatch(getBlockUpdateQueueSize())
+        val count = AtomicInteger(getBlockUpdateQueueSize())
         while (true) {
             val blockUpdate = pollBlockUpdate() ?: break
             tickThreadPool.submit {
@@ -46,6 +49,7 @@ object World {
                     blockUpdate.state.parent.duringBlockActionApply(blockUpdate.type, msg)
                 }, msg.influenceBlocks))
                 msg.secondaryUpdates.forEach {
+                    count.incrementAndGet()
                     applyInnerBlockUpdate(it)
                 }
                 when (blockUpdate.type) {
@@ -69,10 +73,13 @@ object World {
 
                     else -> {}
                 }
-                latch0.countDown()
+                count.decrementAndGet()
             }
         }
-        latch0.await()
+        while (count.get() != 0) {
+            Thread.onSpinWait()
+        }
+
         val usingBlocks = ConcurrentLinkedQueue<BlockPosition>()
         val latch1 = CountDownLatch(tasks.size)
         out@ while (tasks.isNotEmpty()) {
@@ -96,10 +103,12 @@ object World {
         }
         latch1.await()
         exchangeBlockUpdatesQueue()
+        mspt = (System.currentTimeMillis() - time0).toInt()
     }
 
     private val blockUpdates: Queue<BlockUpdate> = ConcurrentLinkedQueue()
     private val blockUpdates2: Queue<BlockUpdate> = ConcurrentLinkedQueue()
+
 
     @Volatile
     private var useQueue2 = false

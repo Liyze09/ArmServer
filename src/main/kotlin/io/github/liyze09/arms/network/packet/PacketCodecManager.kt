@@ -7,8 +7,9 @@ import io.github.liyze09.arms.network.PackUtils.readString
 import io.github.liyze09.arms.network.PackUtils.readVarInt
 import io.github.liyze09.arms.network.packet.serverbound.*
 import io.netty.buffer.ByteBuf
+import io.netty.util.collection.IntObjectHashMap
+import net.minecraftarm.common.ConcurrentMap
 import org.jetbrains.annotations.Contract
-import java.util.concurrent.ConcurrentHashMap
 
 object PacketCodecManager {
     private fun registerServerBoundPacket(
@@ -31,13 +32,13 @@ object PacketCodecManager {
     }
 
     private val serverLogin: MutableMap<Int, ServerBoundPacketDecoder> =
-        ConcurrentHashMap()
+        ConcurrentMap(IntObjectHashMap())
     private val serverConfiguration: MutableMap<Int, ServerBoundPacketDecoder> =
-        ConcurrentHashMap()
+        ConcurrentMap(IntObjectHashMap())
     private val serverPlay: MutableMap<Int, ServerBoundPacketDecoder> =
-        ConcurrentHashMap()
+        ConcurrentMap(IntObjectHashMap())
     private val serverStatus: MutableMap<Int, ServerBoundPacketDecoder> =
-        ConcurrentHashMap()
+        ConcurrentMap(IntObjectHashMap())
 
     @Contract(pure = true)
     private fun getServerMap(type: Connection.Status): MutableMap<Int, ServerBoundPacketDecoder> {
