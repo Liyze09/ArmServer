@@ -1,6 +1,6 @@
 package io.github.liyze09.arms.network
 
-import io.github.liyze09.arms.Configuration
+import io.github.liyze09.arms.GlobalConfiguration
 import io.github.liyze09.arms.network.packet.clientbound.SynchronizePlayerPosition
 import net.minecraftarm.common.Identifier
 import net.minecraftarm.common.TeleportBody
@@ -17,7 +17,7 @@ object NetworkWorld {
         ret.loadToWorld(currentDimension, position)
         connection.sendPacket(ret, io.github.liyze09.arms.network.packet.clientbound.PlayLogin)
             .sendPacket(
-                Configuration.instance.difficulty,
+                GlobalConfiguration.instance.difficulty,
                 io.github.liyze09.arms.network.packet.clientbound.ChangeDifficulty
             )
             .sendPacket(ret.heldItem, io.github.liyze09.arms.network.packet.clientbound.SetHeldItem)

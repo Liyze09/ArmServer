@@ -1,6 +1,6 @@
 package io.github.liyze09.arms.network
 
-import io.github.liyze09.arms.Configuration
+import io.github.liyze09.arms.GlobalConfiguration
 import io.github.liyze09.arms.network.Connection.Companion.getInstance
 import io.github.liyze09.arms.network.PackUtils.readVarInt
 import io.github.liyze09.arms.network.PackUtils.writeVarInt
@@ -12,12 +12,11 @@ import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.ByteToMessageCodec
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.tinylog.kotlin.Logger
 
 object NettyInitialize {
     const val MIN_PROTOCOL_VERSION: Int = 767
-    val LOGGER: Logger = LoggerFactory.getLogger("Network")
+    val LOGGER = Logger.tag("Network")
 
     @JvmField
     val bossGroup: NioEventLoopGroup = NioEventLoopGroup()
@@ -77,6 +76,6 @@ object NettyInitialize {
                         }
                     })
                 }
-            }).bind(Configuration.instance.port)
+            }).bind(GlobalConfiguration.instance.port)
     }
 }

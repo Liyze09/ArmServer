@@ -9,12 +9,25 @@ import net.minecraftarm.registry.block.blockRegistryInit
 import net.minecraftarm.registry.entityRegistryInit
 import net.minecraftarm.registry.item.itemRegistriesInit
 import net.minecraftarm.world.World
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.tinylog.configuration.Configuration
+import org.tinylog.kotlin.Logger
 import java.util.*
 
 object ArmServer {
-    private val LOGGER: Logger = LoggerFactory.getLogger("ArmServer")
+    init {
+        Configuration.set("writer.level", GlobalConfiguration.instance.logLevel)
+        Configuration.set(
+            "writer.format",
+            if (GlobalConfiguration.instance.logFormat.isNotBlank())
+                GlobalConfiguration.instance.logFormat
+            else if (GlobalConfiguration.instance.logLevel == "info" || GlobalConfiguration.instance.logLevel.isBlank())
+                "{level}: {date:HH:mm:ss.SSS} [{thread}] {class-name}: {message}"
+            else
+                "{date:HH:mm:ss.SSS} {tag} {level}: {message} ({date:yyyy-MM-dd} [{thread}] {class}.{method}())"
+        )
+    }
+
+    val LOGGER = Logger.tag("Main")
     const val MINECRAFT_VERSION = "1.21"
     private lateinit var arguments: Array<String>
     private lateinit var channel: Channel
@@ -40,7 +53,7 @@ object ArmServer {
         Thread.ofPlatform().name("Network").start {
             try {
                 channel = start().channel()
-                LOGGER.info("Server started on port {}", Configuration.instance.port)
+                LOGGER.info("Server started on port {}", GlobalConfiguration.instance.port)
                 channel.closeFuture().sync()
             } catch (e: InterruptedException) {
                 throw RuntimeException(e)

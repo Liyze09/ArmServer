@@ -1,6 +1,6 @@
 package net.minecraftarm.world
 
-import io.github.liyze09.arms.Configuration
+import io.github.liyze09.arms.GlobalConfiguration
 import net.minecraftarm.common.BlockPosition
 import net.minecraftarm.common.Identifier
 import net.minecraftarm.common.toByteArray
@@ -15,11 +15,10 @@ import java.util.concurrent.atomic.AtomicInteger
 object World {
     var mspt = 0
     val dimensions = mutableMapOf<Identifier, Dimension>()
-    val seed = Configuration.instance.seed
+    val seed = GlobalConfiguration.instance.seed
     val hashedSeed: Long
     internal val tickHandler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
-    internal val tickThreadPool: ExecutorService =
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+    internal val tickThreadPool: ExecutorService = Executors.newWorkStealingPool()
 
     init {
         dimensions[Identifier("minecraft", "overworld")] = Overworld()
@@ -35,6 +34,17 @@ object World {
         exchangeBlockUpdatesQueue()
         val time0 = System.currentTimeMillis()
         val tasks = LinkedList<BlockUpdateTask>()
+        tickThreadPool.submit {
+            val size = plannedBlockUpdates.size
+            repeat(size) {
+                val update = plannedBlockUpdates.remove()
+                if (update.first <= 1.toShort()) {
+                    applyBlockUpdate(update.second)
+                } else {
+                    plannedBlockUpdates.add(Pair((update.first - 1).toShort(), update.second))
+                }
+            }
+        }
         val count = AtomicInteger(getBlockUpdateQueueSize())
         while (true) {
             val blockUpdate = pollBlockUpdate() ?: break
@@ -84,7 +94,7 @@ object World {
         val latch1 = CountDownLatch(tasks.size)
         out@ while (tasks.isNotEmpty()) {
             tickThreadPool.submit {
-                val task = tasks.element()
+                val task = tasks.remove()
                 for (it in task.influenceBlocks) {
                     if (!usingBlocks.contains(it)) {
                         usingBlocks.add(it)
@@ -108,13 +118,21 @@ object World {
 
     private val blockUpdates: Queue<BlockUpdate> = ConcurrentLinkedQueue()
     private val blockUpdates2: Queue<BlockUpdate> = ConcurrentLinkedQueue()
-
+    private val plannedBlockUpdates: Queue<Pair<Short, BlockUpdate>> = ConcurrentLinkedQueue()
 
     @Volatile
     private var useQueue2 = false
 
     private fun exchangeBlockUpdatesQueue() {
         useQueue2 = !useQueue2
+    }
+
+    fun scheduleBlockUpdate(blockUpdate: BlockUpdate, delayTick: Int) {
+        if (delayTick <= 1) {
+            applyBlockUpdate(blockUpdate)
+        } else {
+            plannedBlockUpdates.add(Pair(delayTick.toShort(), blockUpdate))
+        }
     }
 
     fun applyBlockUpdate(blockUpdate: BlockUpdate) {
@@ -141,10 +159,6 @@ object World {
     private fun getBlockUpdateQueueSize(): Int {
         return if (useQueue2) blockUpdates.size
         else blockUpdates2.size
-    }
-
-    fun makeBlockUpdate(position: BlockPosition, dimension: Dimension, action: BlockAction) {
-        blockUpdates.add(BlockUpdate(position, dimension.getBlockState(position), action, dimension))
     }
 
     fun getDimension(id: Identifier) = dimensions[id] ?: throw IllegalArgumentException("Dimension $id not found")

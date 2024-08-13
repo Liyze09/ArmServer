@@ -63,7 +63,7 @@ object PacketCodecManager {
             Connection.Status.CONFIGURATION, 0x03,
             AcknowledgeFinishConfiguration
         )
-        registerServerBoundPacket(Connection.Status.CONFIGURATION, 0x07, KnownPacks)
+        registerServerBoundPacket(Connection.Status.CONFIGURATION, 0x07, ServerBoundKnownPacks)
         registerServerBoundPacket(Connection.Status.PLAY, 0x12, PluginMessage)
         registerServerBoundPacket(Connection.Status.PLAY, 0x00, ConfirmTeleportation)
     }

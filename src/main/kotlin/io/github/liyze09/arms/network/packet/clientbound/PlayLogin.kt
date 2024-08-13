@@ -1,6 +1,6 @@
 package io.github.liyze09.arms.network.packet.clientbound
 
-import io.github.liyze09.arms.Configuration
+import io.github.liyze09.arms.GlobalConfiguration
 import io.github.liyze09.arms.network.Connection
 import io.github.liyze09.arms.network.PackUtils.writeMCBoolean
 import io.github.liyze09.arms.network.PackUtils.writeString
@@ -18,9 +18,9 @@ object PlayLogin : io.github.liyze09.arms.network.packet.ClientBoundPacketEncode
         World.dimensions.forEach { (id, _) ->
             buf.writeString(id.toString())
         }
-        buf.writeVarInt(Configuration.instance.viewDistance)
-            .writeVarInt(Configuration.instance.simulationDistance)
-            .writeVarInt(Configuration.instance.maxPlayers)
+        buf.writeVarInt(GlobalConfiguration.instance.viewDistance)
+            .writeVarInt(GlobalConfiguration.instance.simulationDistance)
+            .writeVarInt(GlobalConfiguration.instance.maxPlayers)
             .writeMCBoolean(false) // is reduced debug info
             .writeMCBoolean(true) // enable respawn screen
             .writeMCBoolean(false) // do limited crafting
