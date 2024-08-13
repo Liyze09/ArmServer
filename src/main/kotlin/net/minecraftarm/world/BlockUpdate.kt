@@ -18,5 +18,6 @@ data class BlockUpdateMessage(
 data class BlockUpdate(
     val position: BlockPosition,
     val state: BlockState,
-    val type: BlockAction
+    val type: BlockAction,
+    val dimension: Dimension
 )
