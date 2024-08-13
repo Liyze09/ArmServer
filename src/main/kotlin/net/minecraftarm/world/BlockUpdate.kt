@@ -11,7 +11,8 @@ data class BlockUpdateTask(
 
 data class BlockUpdateMessage(
     val msg: Any? = null,
-    val influenceBlocks: List<BlockPosition>
+    val influenceBlocks: List<BlockPosition> = emptyList(),
+    val secondaryUpdates: List<BlockUpdate> = emptyList()
 )
 
 data class BlockUpdate(

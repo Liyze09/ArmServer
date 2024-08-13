@@ -7,6 +7,7 @@ import net.minecraftarm.common.toByteArray
 import net.minecraftarm.common.toLong
 import net.minecraftarm.world.impl.Overworld
 import java.security.MessageDigest
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -15,7 +16,9 @@ object World {
     val dimensions = mutableMapOf<Identifier, Dimension>()
     val seed = Configuration.instance.seed
     val hashedSeed: Long
-    val tickHandler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+    internal val tickHandler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+    internal val tickThreadPool: ExecutorService =
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
     init {
         dimensions[Identifier("minecraft", "overworld")] = Overworld()

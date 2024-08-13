@@ -8,6 +8,7 @@ import net.minecraftarm.registry.Registries.vanillaRegistries
 import net.minecraftarm.registry.block.blockRegistryInit
 import net.minecraftarm.registry.entityRegistryInit
 import net.minecraftarm.registry.item.itemRegistriesInit
+import net.minecraftarm.world.World
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -57,5 +58,7 @@ object ArmServer {
     fun shutdown() {
         LOGGER.info("Stopping!")
         channel.close()
+        World.tickHandler.shutdown()
+        World.tickThreadPool.shutdown()
     }
 }

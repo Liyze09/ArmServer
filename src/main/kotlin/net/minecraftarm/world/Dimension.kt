@@ -13,6 +13,7 @@ import net.minecraftarm.world.gen.WorldgenProvider
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicInteger
 
 abstract class Dimension(val worldgen: WorldgenProvider) {
     abstract val dimensionType: DimensionType
@@ -21,8 +22,6 @@ abstract class Dimension(val worldgen: WorldgenProvider) {
     val entities = ConcurrentHashMap<Int, Entity>(128)
     private val blockUpdates: Queue<BlockUpdate> = ConcurrentLinkedQueue()
     private val blockUpdates2: Queue<BlockUpdate> = ConcurrentLinkedQueue()
-    val innerBlockUpdates: Queue<BlockUpdate> = ConcurrentLinkedQueue()
-
     @Volatile
     private var useQueue2 = false
 
@@ -30,7 +29,7 @@ abstract class Dimension(val worldgen: WorldgenProvider) {
         useQueue2 = !useQueue2
     }
 
-    private fun applyBlockUpdate(blockUpdate: BlockUpdate) {
+    fun applyBlockUpdate(blockUpdate: BlockUpdate) {
         if (useQueue2) {
             blockUpdates2.add(blockUpdate)
         } else {
@@ -38,9 +37,22 @@ abstract class Dimension(val worldgen: WorldgenProvider) {
         }
     }
 
+    private fun applyInnerBlockUpdate(blockUpdate: BlockUpdate) {
+        if (useQueue2) {
+            blockUpdates.add(blockUpdate)
+        } else {
+            blockUpdates2.add(blockUpdate)
+        }
+    }
+
     private fun pollBlockUpdate(): BlockUpdate? {
         return if (useQueue2) blockUpdates.poll()
         else blockUpdates2.poll()
+    }
+
+    private fun getBlockUpdateQueueSize(): Int {
+        return if (useQueue2) blockUpdates.size
+        else blockUpdates2.size
     }
 
     fun getChunk(position: BlockPosition): Chunk {
@@ -89,43 +101,72 @@ abstract class Dimension(val worldgen: WorldgenProvider) {
     fun tick() {
         exchangeBlockUpdatesQueue()
         val tasks = LinkedList<BlockUpdateTask>()
+        val count = AtomicInteger(getBlockUpdateQueueSize())
         while (true) {
             val blockUpdate = pollBlockUpdate() ?: break
-            val msg = blockUpdate.state.parent.beforeBlockActionApply(
-                blockUpdate.type,
-                this,
-                blockUpdate.position,
-                blockUpdate.state
-            )
-            tasks.add(BlockUpdateTask({
-                blockUpdate.state.parent.duringBlockActionApply(blockUpdate.type, msg.msg)
-            }, msg.influenceBlocks))
-            when (blockUpdate.type) {
-                BlockAction.BREAK -> {
-                    tasks.add(
-                        BlockUpdateTask(
-                            { updateBlockState(blockUpdate.position, 0) },
-                            listOf(blockUpdate.position)
-                        )
-                    )
+            World.tickThreadPool.submit {
+                val msg = blockUpdate.state.parent.beforeBlockActionApply(
+                    blockUpdate.type,
+                    this,
+                    blockUpdate.position,
+                    blockUpdate.state
+                )
+                tasks.add(BlockUpdateTask({
+                    blockUpdate.state.parent.duringBlockActionApply(blockUpdate.type, msg)
+                }, msg.influenceBlocks))
+                msg.secondaryUpdates.forEach {
+                    applyInnerBlockUpdate(it)
                 }
-
-                BlockAction.PLACE -> {
-                    tasks.add(
-                        BlockUpdateTask(
-                            { updateBlockState(blockUpdate.position, blockUpdate.state) },
-                            listOf(blockUpdate.position)
+                when (blockUpdate.type) {
+                    BlockAction.BREAK -> {
+                        tasks.add(
+                            BlockUpdateTask(
+                                { updateBlockState(blockUpdate.position, 0) },
+                                listOf(blockUpdate.position)
+                            )
                         )
-                    )
-                }
+                    }
 
-                else -> {}
+                    BlockAction.PLACE -> {
+                        tasks.add(
+                            BlockUpdateTask(
+                                { updateBlockState(blockUpdate.position, blockUpdate.state) },
+                                listOf(blockUpdate.position)
+                            )
+                        )
+                    }
+
+                    else -> {}
+                }
+                count.decrementAndGet()
             }
         }
-        val occupationBlocks = mutableListOf<BlockPosition>()
-
-        tasks.forEach {
-            TODO()
+        while (count.get() != 0) {
+            Thread.onSpinWait()
+        }
+        val usingBlocks = ConcurrentLinkedQueue<BlockPosition>()
+        count.set(usingBlocks.size)
+        out@ while (tasks.isNotEmpty()) {
+            World.tickThreadPool.submit {
+                val task = tasks.element()
+                for (it in task.influenceBlocks) {
+                    if (!usingBlocks.contains(it)) {
+                        usingBlocks.add(it)
+                    } else {
+                        tasks.add(task)
+                        return@submit
+                    }
+                }
+                task.task.run()
+                Thread.yield()
+                for (it in task.influenceBlocks) {
+                    usingBlocks.remove(it)
+                }
+                count.decrementAndGet()
+            }
+        }
+        while (count.get() != 0) {
+            Thread.onSpinWait()
         }
         exchangeBlockUpdatesQueue()
     }

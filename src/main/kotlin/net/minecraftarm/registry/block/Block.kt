@@ -14,8 +14,8 @@ abstract class Block(val blockSettings: BlockSettings) : Registries.Registry {
         position: BlockPosition,
         state: BlockState
     ): BlockUpdateMessage = BlockUpdateMessage(
-        null,
-        emptyList()
+        null
     )
-    open fun duringBlockActionApply(action: BlockAction, msg: Any?) {}
+
+    open fun duringBlockActionApply(action: BlockAction, msg: BlockUpdateMessage) {}
 }
