@@ -4,6 +4,7 @@ import io.github.liyze09.arms.network.Connection
 import io.github.liyze09.arms.network.PackUtils.readString
 import io.github.liyze09.arms.network.packet.clientbound.LoginSuccess
 import io.github.liyze09.arms.network.packet.clientbound.LoginSuccessBody
+import io.github.liyze09.arms.network.packet.clientbound.SetCompression
 import io.netty.buffer.ByteBuf
 import net.minecraftarm.common.UUID
 
@@ -14,6 +15,9 @@ object LoginStart : io.github.liyze09.arms.network.packet.ServerBoundPacketDecod
         connection.setUsername(username)
         connection.setUUID(uuid)
         connection.sendPacket(
+            null,
+            SetCompression
+        ).sendPacket(
             LoginSuccessBody(uuid, username),
             LoginSuccess
         )

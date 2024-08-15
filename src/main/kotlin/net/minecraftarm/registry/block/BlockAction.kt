@@ -4,5 +4,6 @@ enum class BlockAction {
     BREAK,
     PLACE,
     INTERACT,
-    BLOCK_UPDATE
+    POST_PLACEMENT,
+    NEIGHBOR_CHANGE
 }

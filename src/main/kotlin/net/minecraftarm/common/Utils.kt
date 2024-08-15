@@ -26,5 +26,6 @@ fun ByteArray.toLong(): Long {
             or ((this[7].toLong() and 0xffL) shl 0))
 }
 
-fun toYZX(x: Int, y: Int, z: Int) = y shl 8 or (z shl 4) or x
+fun toYZX(x: Int, y: Int, z: Int): Int = y shl 8 or (z shl 4) or x
 fun toXZ(x: Int, z: Int): Long = (z.toLong() shl 32) or x.toLong()
+fun to8bitXZ(first: Int, second: Int) = first shl 4 or second

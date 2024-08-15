@@ -1,5 +1,6 @@
 package net.minecraftarm.world
 
+import net.minecraftarm.common.to8bitXZ
 import net.minecraftarm.common.toYZX
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
@@ -15,7 +16,9 @@ class Chunk(
 
     val maxY = minY + height - 1
     private val lock = ReentrantReadWriteLock()
+    private val heightLock = ReentrantReadWriteLock()
     private val childChunks = Array(height / 16) { ChildChunk() }
+    private val worldSurfaceHeightMap = IntArray(512)
     internal fun getBlockStateIDByChunkPosition(x: Int, y: Int, z: Int): Int {
         lock.readLock().lock()
         try {
@@ -37,6 +40,24 @@ class Chunk(
             childChunks[y / 16].setBlockState(x, y % 16, z, id)
         } finally {
             lock.writeLock().unlock()
+        }
+    }
+
+    internal fun setWorldSurface(x: Int, z: Int, state: Int) {
+        heightLock.writeLock().lock()
+        try {
+            worldSurfaceHeightMap[to8bitXZ(x, z)] = state
+        } finally {
+            heightLock.writeLock().unlock()
+        }
+    }
+
+    internal fun getWorldSurface(x: Int, z: Int): Int {
+        heightLock.readLock().lock()
+        try {
+            return worldSurfaceHeightMap[to8bitXZ(x, z)]
+        } finally {
+            heightLock.readLock().unlock()
         }
     }
 

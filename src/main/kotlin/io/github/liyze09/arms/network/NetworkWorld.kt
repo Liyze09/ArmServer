@@ -1,7 +1,7 @@
 package io.github.liyze09.arms.network
 
 import io.github.liyze09.arms.GlobalConfiguration
-import io.github.liyze09.arms.network.packet.clientbound.SynchronizePlayerPosition
+import io.github.liyze09.arms.network.packet.clientbound.*
 import net.minecraftarm.common.Identifier
 import net.minecraftarm.common.TeleportBody
 import net.minecraftarm.entity.Player
@@ -15,15 +15,15 @@ object NetworkWorld {
         val currentDimension = World.getDimension(Identifier("minecraft", "overworld"))
         val position = World.getWorldSpawnPoint().toEntityPosition()
         ret.loadToWorld(currentDimension, position)
-        connection.sendPacket(ret, io.github.liyze09.arms.network.packet.clientbound.PlayLogin)
+        connection.sendPacket(ret, PlayLogin)
             .sendPacket(
                 GlobalConfiguration.instance.difficulty,
-                io.github.liyze09.arms.network.packet.clientbound.ChangeDifficulty
+                ChangeDifficulty
             )
-            .sendPacket(ret.heldItem, io.github.liyze09.arms.network.packet.clientbound.SetHeldItem)
+            .sendPacket(ret.heldItem, SetHeldItem)
             .sendPacket(
                 Pair(ret.entityId, 24/*TODO op level*/),
-                io.github.liyze09.arms.network.packet.clientbound.EntityEvent
+                EntityEvent
             )
             .sendPacket(
                 TeleportBody(position),

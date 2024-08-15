@@ -18,7 +18,8 @@ object World {
     val seed = GlobalConfiguration.instance.seed
     val hashedSeed: Long
     internal val tickHandler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
-    internal val tickThreadPool: ExecutorService = Executors.newWorkStealingPool()
+    internal val tickThreadPool: ExecutorService =
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
     init {
         dimensions[Identifier("minecraft", "overworld")] = Overworld()
@@ -70,6 +71,7 @@ object World {
                                 listOf(blockUpdate.position)
                             )
                         )
+                        postPlacement(blockUpdate)
                     }
 
                     BlockAction.PLACE -> {
@@ -79,6 +81,7 @@ object World {
                                 listOf(blockUpdate.position)
                             )
                         )
+                        postPlacement(blockUpdate)
                     }
 
                     else -> {}
@@ -125,6 +128,69 @@ object World {
 
     private fun exchangeBlockUpdatesQueue() {
         useQueue2 = !useQueue2
+    }
+
+    private fun postPlacement(blockUpdate: BlockUpdate) {
+        BlockPosition(blockUpdate.position.x + 1, blockUpdate.position.y, blockUpdate.position.z).let {
+            applyInnerBlockUpdate(
+                BlockUpdate(
+                    it,
+                    blockUpdate.dimension.getBlockState(it),
+                    BlockAction.POST_PLACEMENT,
+                    blockUpdate.dimension
+                )
+            )
+        }
+        BlockPosition(blockUpdate.position.x - 1, blockUpdate.position.y, blockUpdate.position.z).let {
+            applyInnerBlockUpdate(
+                BlockUpdate(
+                    it,
+                    blockUpdate.dimension.getBlockState(it),
+                    BlockAction.POST_PLACEMENT,
+                    blockUpdate.dimension
+                )
+            )
+        }
+        BlockPosition(blockUpdate.position.x, blockUpdate.position.y + 1, blockUpdate.position.z).let {
+            applyInnerBlockUpdate(
+                BlockUpdate(
+                    it,
+                    blockUpdate.dimension.getBlockState(it),
+                    BlockAction.POST_PLACEMENT,
+                    blockUpdate.dimension
+                )
+            )
+        }
+        BlockPosition(blockUpdate.position.x, blockUpdate.position.y - 1, blockUpdate.position.z).let {
+            applyInnerBlockUpdate(
+                BlockUpdate(
+                    it,
+                    blockUpdate.dimension.getBlockState(it),
+                    BlockAction.POST_PLACEMENT,
+                    blockUpdate.dimension
+                )
+            )
+        }
+        BlockPosition(blockUpdate.position.x, blockUpdate.position.y, blockUpdate.position.z + 1).let {
+            applyInnerBlockUpdate(
+                BlockUpdate(
+                    it,
+                    blockUpdate.dimension.getBlockState(it),
+                    BlockAction.POST_PLACEMENT,
+                    blockUpdate.dimension
+                )
+            )
+        }
+        BlockPosition(blockUpdate.position.x, blockUpdate.position.y, blockUpdate.position.z - 1).let {
+            applyInnerBlockUpdate(
+                BlockUpdate(
+                    it,
+                    blockUpdate.dimension.getBlockState(it),
+                    BlockAction.POST_PLACEMENT,
+                    blockUpdate.dimension
+                )
+            )
+        }
     }
 
     fun scheduleBlockUpdate(blockUpdate: BlockUpdate, delayTick: Int) {
