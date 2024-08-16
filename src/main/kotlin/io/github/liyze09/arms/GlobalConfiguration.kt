@@ -11,7 +11,6 @@ class GlobalConfiguration private constructor() {
     var seed: Long = ThreadLocalRandom.current().nextLong()
     var logFormat = ""
     var logLevel = "info"
-    var compressThreshold = 1024
 
     companion object {
         val instance: GlobalConfiguration = GlobalConfiguration()

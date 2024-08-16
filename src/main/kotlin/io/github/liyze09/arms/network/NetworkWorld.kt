@@ -28,6 +28,9 @@ object NetworkWorld {
             .sendPacket(
                 TeleportBody(position),
                 SynchronizePlayerPosition
+            ).sendPacket(
+                Pair(position.x.toInt() and 15, position.z.toInt() and 15),
+                SetCenterChunk
             )
 
         // TODO Recipe Book / Recipes
