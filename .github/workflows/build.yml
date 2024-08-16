@@ -36,7 +36,7 @@ jobs:
           chmod +x ./gradlew
 
       - name: restore wrapper cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
