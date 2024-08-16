@@ -96,9 +96,11 @@ object NettyInitialize {
                                         inflater.setInput(buf.nioBuffer())
                                         inflater.inflate(buf2.nioBuffer())
                                         inflater.end()
+                                        buf.release()
                                         val id = buf2.readVarInt()
                                         val data = buf2.readBytes(dataLength - getVarIntLength(id))
                                         val packet = Packet(dataLength, id, data)
+                                        buf2.release()
                                         LOGGER.trace("{}: {}", channelHandlerContext.name(), packet)
                                         list.add(packet)
                                     }
