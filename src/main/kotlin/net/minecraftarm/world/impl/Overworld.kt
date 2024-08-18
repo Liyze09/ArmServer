@@ -3,9 +3,9 @@ package net.minecraftarm.world.impl
 import net.minecraftarm.common.Identifier
 import net.minecraftarm.registry.DimensionType
 import net.minecraftarm.world.Dimension
-import net.minecraftarm.world.gen.impl.ArmWorldgen
+import net.minecraftarm.world.gen.impl.Overworld
 
-class Overworld : Dimension(ArmWorldgen) {
+class Overworld : Dimension(Overworld) {
     override val dimensionType: DimensionType
         get() = overworld
     override val name: Identifier

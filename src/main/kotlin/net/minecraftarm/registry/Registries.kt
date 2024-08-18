@@ -14,6 +14,16 @@ import net.minecraftarm.world.gen.Biome
 import net.minecraftarm.world.impl.Overworld
 
 object Registries {
+    private var initialized = false
+    internal fun initialize() {
+        if (initialized) throw IllegalStateException("Registries already initialized")
+        initialized = true
+        var id = 0
+        registries[RegistryTypes.BIOME]!!.forEach { (_, it) ->
+            it as Biome
+            it.id = id++
+        }
+    }
     val jsonRegistries: JsonObject = JsonParser.parseReader(
         Registries::class.java.getResourceAsStream("/registries/registries.json")
             ?.bufferedReader() ?: throw RuntimeException("Failed to load registries.json")
@@ -77,6 +87,7 @@ object Registries {
         name: Identifier,
         obj: Registry
     ) {
+        check(!initialized) { "Bad runtime registering. Registries are already initialized." }
         registries[type]!![name] = obj
     }
 
@@ -84,6 +95,7 @@ object Registries {
         type: RegistryTypes,
         vararg registries: Pair<Identifier, Registry>
     ) {
+        check(!initialized) { "Bad runtime registering. Registries are already initialized." }
         registries.forEach { (name, registry) ->
             register(type, name, registry)
         }
@@ -93,6 +105,7 @@ object Registries {
         type: RegistryTypes,
         map: Map<Identifier, Registry>
     ) {
+        check(!initialized) { "Bad runtime registering. Registries are already initialized." }
         map.forEach { (name, registry) ->
             register(type, name, registry)
         }

@@ -4,6 +4,7 @@ import io.github.liyze09.arms.network.NettyInitialize
 import io.github.liyze09.arms.network.NettyInitialize.start
 import io.github.liyze09.arms.network.packet.PacketCodecManager.registerPackets
 import io.netty.channel.Channel
+import net.minecraftarm.registry.Registries
 import net.minecraftarm.registry.Registries.vanillaRegistries
 import net.minecraftarm.registry.block.blockRegistryInit
 import net.minecraftarm.registry.entityRegistryInit
@@ -50,6 +51,7 @@ object ArmServer {
         blockRegistryInit()
         itemRegistriesInit()
         entityRegistryInit()
+        Registries.initialize()
         Thread.ofPlatform().name("Network").start {
             try {
                 channel = start().channel()

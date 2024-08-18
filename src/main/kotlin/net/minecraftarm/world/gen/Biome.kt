@@ -18,6 +18,7 @@ data class Biome(
     @SerializedName("temperature_modifier")
     val temperatureModifier: String?,
 ) : Registries.Registry {
+    var id: Int = -1
 
     override fun toNbt(): NbtCompound {
         val root = mutableMapOf(
@@ -113,7 +114,7 @@ data class Biome(
         val options: ParticleOptions
     )
 
-    open class ParticleOptions(
+    data class ParticleOptions(
         val type: String,
     )
 
