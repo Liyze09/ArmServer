@@ -2,6 +2,10 @@
 
 package net.minecraftarm.common
 
+import io.github.liyze09.arms.network.PackUtils.writeVarInt
+import io.netty.buffer.ByteBuf
+import java.util.*
+
 fun Long.toByteArray(): ByteArray {
     val b = ByteArray(8)
     b[7] = (this and 0xffL).toByte()
@@ -26,6 +30,15 @@ fun ByteArray.toLong(): Long {
             or ((this[7].toLong() and 0xffL) shl 0))
 }
 
+fun BitSet.writeToBuffer(buffer: ByteBuf) {
+    val array = this.toLongArray()
+    buffer.writeVarInt(array.size)
+    for (i in array.indices) {
+        buffer.writeLong(array[i])
+    }
+}
+
 fun toYZX(x: Int, y: Int, z: Int): Int = y shl 8 or (z shl 4) or x
+fun to6bitYZX(x: Int, y: Int, z: Int): Int = y shl 4 or (z shl 2) or x
 fun toXZ(x: Int, z: Int): Long = (z.toLong() shl 32) or x.toLong()
 fun to8bitXZ(first: Int, second: Int) = first shl 4 or second

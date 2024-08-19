@@ -52,6 +52,7 @@ object ArmServer {
         itemRegistriesInit()
         entityRegistryInit()
         Registries.initialize()
+        World.tick()
         Thread.ofPlatform().name("Network").start {
             try {
                 channel = start().channel()
