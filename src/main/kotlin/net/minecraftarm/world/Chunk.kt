@@ -41,7 +41,7 @@ class Chunk(
         if (x < 0 || x > 15 || z < 0 || z > 15 || y < minY || y > maxY) {
             throw IllegalArgumentException("Position out of bounds")
         }
-        childChunks[(y - minY) / 16 - 1].setBlockState(x, y % 16, z, id)
+        childChunks[(y - minY) / 16 - 1]./*Cache will be thrown there →*/setBlockState(x, y % 16, z, id)
     }
 
     private val worldSurface = LongArray(arrayLength)
@@ -62,6 +62,7 @@ class Chunk(
     }
 
     fun setWorldSurface(x: Int, z: Int, height: Long) {
+        invalidateCache()
         try {
             val i = x + 16 * z
             heightLock.writeLock().lock()
@@ -85,6 +86,7 @@ class Chunk(
     }
 
     fun setMotionBlocking(x: Int, z: Int, height: Long) {
+        invalidateCache()
         try {
             val i = x + 16 * z
             heightLock.writeLock().lock()
@@ -110,6 +112,7 @@ class Chunk(
         }
 
         fun setBiome(x: Int, y: Int, z: Int, biome: Int) {
+            invalidateCache()
             this.biome[to6bitYZX(x, y, z)] = biome
         }
         fun getBlockState(x: Int, y: Int, z: Int): Int {
@@ -121,6 +124,7 @@ class Chunk(
             }
         }
         fun setBlockState(x: Int, y: Int, z: Int, state: Int) {
+            invalidateCache()
             val yzx = toYZX(x, y, z)
             try {
                 lock.writeLock().lock()
@@ -144,6 +148,7 @@ class Chunk(
         }
 
         fun setBlockLight(x: Int, y: Int, z: Int, light: Int) {
+            invalidateCache()
             try {
                 lock.writeLock().lock()
                 val yzx = toYZX(x, y, z)
@@ -169,6 +174,7 @@ class Chunk(
         }
 
         fun setSkyLight(x: Int, y: Int, z: Int, light: Int) {
+            invalidateCache()
             try {
                 val yzx = toYZX(x, y, z)
                 lock.writeLock().lock()
@@ -299,6 +305,46 @@ class Chunk(
         buf.writeBytes(blockLightBuf)
         skyLightBuf.release()
         blockLightBuf.release()
+    }
+
+
+    @Volatile
+    private var cache: ByteBuf? = null
+    private val cacheLock = ReentrantReadWriteLock()
+    fun getCachedBytes(): ByteBuf {
+        try {
+            cacheLock.readLock().lock()
+            if (cache != null) return cache!!
+            val buf = ByteBufAllocator.DEFAULT.heapBuffer()
+            writeToBuffer(buf)
+            cache = buf
+            return buf
+        } finally {
+            cacheLock.readLock().unlock()
+        }
+    }
+
+    fun updateCache() {
+        try {
+            cacheLock.writeLock().lock()
+            cache?.release()
+            cache = null
+            val buf = ByteBufAllocator.DEFAULT.heapBuffer()
+            writeToBuffer(buf)
+            cache = buf
+        } finally {
+            cacheLock.writeLock().unlock()
+        }
+    }
+
+    fun invalidateCache() {
+        try {
+            cacheLock.writeLock().lock()
+            cache?.release()
+            cache = null
+        } finally {
+            cacheLock.writeLock().unlock()
+        }
     }
 
     companion object {

@@ -10,7 +10,7 @@ object ChunkDataAndUpdateLight : ClientBoundPacketEncoder<Chunk> {
         val buf = connection.ctx.alloc().buffer()
         buf.writeInt(msg.x)
         buf.writeInt(msg.z)
-        msg.writeToBuffer(buf)
+        buf.writeBytes(msg.getCachedBytes())
         return Packet.of(0x27, buf)
     }
 }

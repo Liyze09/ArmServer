@@ -18,7 +18,7 @@ abstract class Dimension(val worldgen: WorldgenProvider) {
     abstract val name: Identifier
     private val chunkMap = ConcurrentHashMap<Long, Chunk>(512)
     val entities = ConcurrentHashMap<Int, Entity>(128)
-
+    private val cachedInt by lazy { 256 / (64 / log2(dimensionType.height.toFloat())).toInt() + 1 }
     fun getChunk(x: Int, z: Int): Chunk {
         return chunkMap.getOrPut(toXZ(x, z)) {
             val chunk = Chunk(
@@ -26,7 +26,7 @@ abstract class Dimension(val worldgen: WorldgenProvider) {
                 z,
                 dimensionType.height,
                 dimensionType.minY,
-                256 / (64 / log2(dimensionType.height.toFloat())).toInt() + 1
+                cachedInt
             )
             // TODO Load save
             worldgen.genChunk(x, z, chunk)
