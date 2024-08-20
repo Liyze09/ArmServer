@@ -18,8 +18,8 @@ object World {
     val seed = GlobalConfiguration.instance.seed
     val hashedSeed: Long
     internal val tickHandler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
-    internal val tickThreadPool: ExecutorService =
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+    internal val globalThreadPool: ExecutorService =
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1)
 
     init {
         dimensions[Identifier("minecraft", "overworld")] = Overworld()
@@ -35,7 +35,7 @@ object World {
         exchangeBlockUpdatesQueue()
         val time0 = System.currentTimeMillis()
         val tasks = LinkedList<BlockUpdateTask>()
-        tickThreadPool.submit {
+        globalThreadPool.submit {
             val size = plannedBlockUpdates.size
             repeat(size) {
                 val update = plannedBlockUpdates.remove()
@@ -49,7 +49,7 @@ object World {
         val count = AtomicInteger(getBlockUpdateQueueSize())
         while (true) {
             val blockUpdate = pollBlockUpdate() ?: break
-            tickThreadPool.submit {
+            globalThreadPool.submit {
                 val msg = blockUpdate.state.parent.beforeBlockActionApply(
                     blockUpdate.type,
                     blockUpdate.dimension,
@@ -96,7 +96,7 @@ object World {
         val usingBlocks = ConcurrentLinkedQueue<BlockPosition>()
         val latch1 = CountDownLatch(tasks.size)
         out@ while (tasks.isNotEmpty()) {
-            tickThreadPool.submit {
+            globalThreadPool.submit {
                 val task = tasks.remove()
                 for (it in task.influenceBlocks) {
                     if (!usingBlocks.contains(it)) {

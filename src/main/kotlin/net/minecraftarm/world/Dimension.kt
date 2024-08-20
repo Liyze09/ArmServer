@@ -20,27 +20,39 @@ abstract class Dimension(val worldgen: WorldgenProvider) {
     val entities = ConcurrentHashMap<Int, Entity>(128)
     private val cachedInt by lazy { 256 / (64 / log2(dimensionType.height.toFloat())).toInt() + 1 }
     fun getChunk(x: Int, z: Int): Chunk {
-        return chunkMap.getOrPut(toXZ(x, z)) {
-            val chunk = Chunk(
+        val ret = chunkMap.getOrPut(toXZ(x, z)) {
+            Chunk(
                 x,
                 z,
-                dimensionType.height,
-                dimensionType.minY,
+                this,
                 cachedInt
             )
             // TODO Load save
-            worldgen.genChunk(x, z, chunk)
-            worldgen.updateHeightMap(chunk)
+        }
+        if (ret.isProto()) ret.upgradeChunk()
+        return ret
+    }
+
+    fun preloadChunk(x: Int, z: Int): Chunk {
+        // TODO Load save
+        return chunkMap.getOrPut(toXZ(x, z)) {
+            Chunk(
+                x,
+                z,
+                this,
+                cachedInt
+            )
         }
     }
 
     fun unloadChunk(position: BlockPosition) {
         // TODO Save save
-        chunkMap.remove(toXZ(position.x, position.z))
+        chunkMap.remove(toXZ(position.x, position.z))?.invalidateCache()
     }
 
-    internal fun updateBlockState(position: BlockPosition, state: BlockState) {
+    fun updateBlockState(position: BlockPosition, state: BlockState) {
         val chunk = getChunk(position.x shr 4, position.z shr 4)
+        chunk.upgradeChunk()
         EventRelater.broadcastEvent("BLOCK_UPDATE", Pair(position, state))
         chunk.setBlockStateIDByChunkPosition(
             position.x and 15,
@@ -52,6 +64,7 @@ abstract class Dimension(val worldgen: WorldgenProvider) {
 
     internal fun updateBlockState(position: BlockPosition, state: Int) {
         val chunk = getChunk(position.x shr 4, position.z shr 4)
+        chunk.upgradeChunk()
         EventRelater.broadcastEvent("BLOCK_UPDATE", Pair(position, state))
         chunk.setBlockStateIDByChunkPosition(
             position.x and 15,
@@ -63,6 +76,7 @@ abstract class Dimension(val worldgen: WorldgenProvider) {
 
     fun getBlockState(position: BlockPosition): BlockState {
         val chunk = getChunk(position.x shr 4, position.z shr 4)
+        chunk.upgradeChunk()
         return blockStatesByProtocolId[chunk.getBlockStateIDByChunkPosition(
             position.x and 15,
             position.y,

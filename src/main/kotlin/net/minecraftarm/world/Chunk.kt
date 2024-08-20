@@ -16,8 +16,9 @@ import kotlin.math.log2
 class Chunk(
     val x: Int,
     val z: Int,
-    height: Int,
-    val minY: Int,
+    val dimension: Dimension,
+    val minY: Int = dimension.dimensionType.minY,
+    val height: Int = dimension.dimensionType.height,
     arrayLength: Int = 256 / (64 / log2(height.toFloat())).toInt() + 1
 ) {
     init {
@@ -29,19 +30,21 @@ class Chunk(
     val maxY = minY + height
     private val heightLock = ReentrantReadWriteLock()
     private val childChunks = Array(height / 16) { this.ChildChunk() }
+    private var proto = true
     internal fun sections() = childChunks
-    internal fun getBlockStateIDByChunkPosition(x: Int, y: Int, z: Int): Int {
+    fun isProto() = proto
+    fun getBlockStateIDByChunkPosition(x: Int, y: Int, z: Int): Int {
         if (x < 0 || x > 15 || z < 0 || z > 15 || y < minY || y > maxY) {
             throw IllegalArgumentException("Position out of bounds")
         }
         return childChunks[(y - minY) / 16 - 1].getBlockState(x, y % 16, z)
     }
 
-    internal fun setBlockStateIDByChunkPosition(x: Int, y: Int, z: Int, id: Int) {
+    fun setBlockStateIDByChunkPosition(x: Int, y: Int, z: Int, id: Int) {
         if (x < 0 || x > 15 || z < 0 || z > 15 || y < minY || y > maxY) {
             throw IllegalArgumentException("Position out of bounds")
         }
-        childChunks[(y - minY) / 16 - 1]./*Cache will be thrown there →*/setBlockState(x, y % 16, z, id)
+        childChunks[(y - minY) / 16 - 1]./*Cache will be invalidated there →*/setBlockState(x, y % 16, z, id)
     }
 
     private val worldSurface = LongArray(arrayLength)
@@ -226,7 +229,8 @@ class Chunk(
         }
     }
 
-    fun writeToBuffer(buf: ByteBuf) {
+    private fun writeToBuffer(buf: ByteBuf) {
+        // Heightmap
         NbtCompound(
             "MOTION_BLOCKING" to NbtLongArray(this.motionBlocking),
             "WORLD_SURFACE" to NbtLongArray(this.worldSurface)
@@ -307,6 +311,12 @@ class Chunk(
         blockLightBuf.release()
     }
 
+    fun upgradeChunk() {
+        if (!proto) return
+        dimension.worldgen.genChunk(x, z, this)
+        dimension.worldgen.updateHeightMap(this)
+        this.proto = true
+    }
 
     @Volatile
     private var cache: ByteBuf? = null
@@ -325,15 +335,17 @@ class Chunk(
     }
 
     fun updateCache() {
-        try {
-            cacheLock.writeLock().lock()
-            cache?.release()
-            cache = null
-            val buf = ByteBufAllocator.DEFAULT.heapBuffer()
-            writeToBuffer(buf)
-            cache = buf
-        } finally {
-            cacheLock.writeLock().unlock()
+        World.globalThreadPool.submit {
+            try {
+                cacheLock.writeLock().lock()
+                cache?.release()
+                cache = null
+                val buf = ByteBufAllocator.DEFAULT.heapBuffer()
+                writeToBuffer(buf)
+                cache = buf
+            } finally {
+                cacheLock.writeLock().unlock()
+            }
         }
     }
 
@@ -345,6 +357,19 @@ class Chunk(
         } finally {
             cacheLock.writeLock().unlock()
         }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Chunk) return false
+        return x == other.x && z == other.z && dimension.name == other.dimension.name
+    }
+
+    override fun hashCode(): Int {
+        var result = x
+        result = 31 * result + z
+        result = 31 * result + dimension.hashCode()
+        return result
     }
 
     companion object {

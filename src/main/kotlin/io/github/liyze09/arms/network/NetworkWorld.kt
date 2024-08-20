@@ -52,15 +52,25 @@ object NetworkWorld {
     }
 
     fun loadChunksAround(playerX: Int, playerZ: Int, radius: Int, dimension: Dimension): List<Chunk> {
-        val startX = playerX / 16 - radius
-        val endX = playerX / 16 + radius
-        val startZ = playerZ / 16 - radius
-        val endZ = playerZ / 16 + radius
+        val startX0 = playerX / 16 - radius
+        val endX0 = playerX / 16 + radius
+        val startZ0 = playerZ / 16 - radius
+        val endZ0 = playerZ / 16 + radius
+        for (x in startX0..endX0) {
+            for (z in startZ0..endZ0) {
+                dimension.getChunk(x, z)
+            }
+        }
+
+        val startX = playerX / 16 - radius - 2
+        val endX = playerX / 16 + radius + 2
+        val startZ = playerZ / 16 - radius - 2
+        val endZ = playerZ / 16 + radius + 2
         val ret = mutableListOf<Chunk>()
 
         for (x in startX..endX) {
             for (z in startZ..endZ) {
-                ret.add(dimension.getChunk(x, z))
+                ret.add(dimension.preloadChunk(x, z))
             }
         }
         return ret

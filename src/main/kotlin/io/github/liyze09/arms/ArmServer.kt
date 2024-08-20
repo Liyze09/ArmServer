@@ -75,6 +75,6 @@ object ArmServer {
         LOGGER.info("Stopping!")
         channel.close()
         World.tickHandler.shutdown()
-        World.tickThreadPool.shutdown()
+        World.globalThreadPool.shutdown()
     }
 }
