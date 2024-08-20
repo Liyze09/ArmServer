@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBuf
 import io.netty.buffer.ByteBufAllocator
 import net.minecraftarm.common.to6bitYZX
 import net.minecraftarm.common.toYZX
+import net.minecraftarm.common.writeToBuffer
 import net.minecraftarm.nbt.NbtCompound
 import net.minecraftarm.nbt.NbtLongArray
 import java.util.*
@@ -33,14 +34,14 @@ class Chunk(
         if (x < 0 || x > 15 || z < 0 || z > 15 || y < minY || y > maxY) {
             throw IllegalArgumentException("Position out of bounds")
         }
-        return childChunks[(y - minY) / 16].getBlockState(x, y % 16, z)
+        return childChunks[(y - minY) / 16 - 1].getBlockState(x, y % 16, z)
     }
 
     internal fun setBlockStateIDByChunkPosition(x: Int, y: Int, z: Int, id: Int) {
         if (x < 0 || x > 15 || z < 0 || z > 15 || y < minY || y > maxY) {
             throw IllegalArgumentException("Position out of bounds")
         }
-        childChunks[(y - minY) / 16].setBlockState(x, y % 16, z, id)
+        childChunks[(y - minY) / 16 - 1].setBlockState(x, y % 16, z, id)
     }
 
     private val worldSurface = LongArray(arrayLength)
@@ -287,10 +288,17 @@ class Chunk(
                 sectionsBuf.writeBytes(chunk.blockLight)
             }
         }
+        skyLightMask.writeToBuffer(buf)
+        blockLightMask.writeToBuffer(buf)
+        emptySkyLightMask.writeToBuffer(buf)
+        emptyBlockLightMask.writeToBuffer(buf)
+
         buf.writeVarInt(skyLightMask.cardinality())
         buf.writeBytes(skyLightBuf)
         buf.writeVarInt(blockLightMask.cardinality())
         buf.writeBytes(blockLightBuf)
+        skyLightBuf.release()
+        blockLightBuf.release()
     }
 
     companion object {

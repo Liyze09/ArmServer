@@ -2,6 +2,7 @@ package io.github.liyze09.arms.network
 
 import io.github.liyze09.arms.GlobalConfiguration
 import io.github.liyze09.arms.network.Connection.Companion.getInstance
+import io.github.liyze09.arms.network.PackUtils.getVarInt
 import io.github.liyze09.arms.network.PackUtils.getVarIntLength
 import io.github.liyze09.arms.network.PackUtils.readVarInt
 import io.github.liyze09.arms.network.PackUtils.writeVarInt
@@ -40,6 +41,7 @@ object NettyInitialize {
                             buf.writeVarInt(o.id)
                             buf.writeBytes(o.data)
                             channelHandlerContext.channel().writeAndFlush(buf)
+                            LOGGER.trace("To {}: {}", channelHandlerContext.name(), o)
                         }
 
                         override fun decode(
@@ -47,14 +49,19 @@ object NettyInitialize {
                             byteBuf: ByteBuf,
                             list: MutableList<Any>
                         ) {
-                            while (byteBuf.isReadable) {
-                                val length = byteBuf.readVarInt()
-                                val id = byteBuf.readVarInt()
-                                val data = byteBuf.readBytes(length - getVarIntLength(id))
-                                val packet = Packet(length, id, data)
-                                LOGGER.trace("{}: {}", channelHandlerContext.name(), packet)
-                                list.add(packet)
+                            val len = byteBuf.getVarInt()
+                            val length = len.first
+                            val bytes = len.second
+                            if (byteBuf.readableBytes() < length) {
+                                return
                             }
+                            byteBuf.skipBytes(bytes)
+                            val id = byteBuf.readVarInt()
+                            val data = byteBuf.readBytes(length - getVarIntLength(id))
+                            val packet = Packet(length, id, data)
+                            LOGGER.trace("{}: {}", channelHandlerContext.name(), packet)
+                            list.add(packet)
+
                         }
                     })
                     pipeline.addLast(object : SimpleChannelInboundHandler<Packet>() {
@@ -65,7 +72,7 @@ object NettyInitialize {
                                     ?.decode(packet.data, connection)
                             } catch (e: Exception) {
                                 LOGGER.warn(
-                                    "Error while decoding packet {}\n Connection: {}\n Cause by: {}",
+                                    "Error while processing packet {}\n Connection: {}\n Cause by: {}",
                                     packet,
                                     connection,
                                     e.stackTraceToString()

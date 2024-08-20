@@ -1,6 +1,5 @@
 package io.github.liyze09.arms.network
 
-import io.github.liyze09.arms.network.NettyInitialize.LOGGER
 import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelHandlerContext
 import net.minecraftarm.common.UUID
@@ -111,8 +110,8 @@ class Connection private constructor(@JvmField val ctx: ChannelHandlerContext) {
     fun <T> sendPacket(msg: T, encoder: io.github.liyze09.arms.network.packet.ClientBoundPacketEncoder<T>): Connection {
         try {
             val packet = encoder.encode(msg, this)
-            LOGGER.trace("To {}: {}", this.ctx.name(), packet)
             this.ctx.writeAndFlush(packet)
+            packet.data.release()
         } catch (e: IOException) {
             throw RuntimeException(e)
         }

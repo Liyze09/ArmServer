@@ -31,6 +31,9 @@ object NetworkWorld {
                 TeleportBody(position),
                 SynchronizePlayerPosition
             ).sendPacket(
+                Pair(GameEvent.GameEventBody.START_WAITING_FOR_LEVEL_CHUNKS, 0F),
+                GameEvent
+            ).sendPacket(
                 Pair(position.x.toInt() and 15, position.z.toInt() and 15),
                 SetCenterChunk
             )

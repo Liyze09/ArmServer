@@ -231,7 +231,7 @@ object World {
 
     fun getWorldSpawnPoint(): BlockPosition {
         // TODO
-        return BlockPosition(0, 64, 0)
+        return BlockPosition(0, 256, 0)
     }
 
 

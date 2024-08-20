@@ -85,6 +85,27 @@ object PackUtils {
         }
     }
 
+    fun ByteBuf.getVarInt(): Pair<Int, Int> {
+        var value = 0
+        var position = 0
+        var currentByte: Byte
+        var index = this.readerIndex()
+
+        while (true) {
+            currentByte = this.getByte(index)
+            value = value or ((currentByte.toInt() and SEGMENT_BITS) shl position)
+
+            if ((currentByte.toInt() and CONTINUE_BIT) == 0) break
+
+            position += 7
+            index++
+
+            if (position >= 32) throw VarIntTooBigException()
+        }
+
+        return Pair(value, index - this.readerIndex() + 1)
+    }
+
     fun ByteBuf.readMCBoolean(): Boolean {
         return this.readByte().toInt() != 0
     }
