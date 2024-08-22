@@ -73,7 +73,7 @@ object PerlinNoise {
     init {
         val random = Random(GlobalConfiguration.instance.seed)
         for (i in 0..255) {
-            p[i] = random.nextInt()
+            p[i] = random.nextInt(0, 255)
             p[256 + i] = p[i]
         }
     }

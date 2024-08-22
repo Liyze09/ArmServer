@@ -25,6 +25,8 @@ abstract class Dimension(val worldgen: WorldgenProvider) {
                 x,
                 z,
                 this,
+                dimensionType.minY,
+                dimensionType.height,
                 cachedInt
             )
             // TODO Load save
@@ -40,6 +42,8 @@ abstract class Dimension(val worldgen: WorldgenProvider) {
                 x,
                 z,
                 this,
+                dimensionType.minY,
+                dimensionType.height,
                 cachedInt
             )
         }

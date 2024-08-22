@@ -17,8 +17,8 @@ class Chunk(
     val x: Int,
     val z: Int,
     val dimension: Dimension,
-    val minY: Int = dimension.dimensionType.minY,
-    val height: Int = dimension.dimensionType.height,
+    val minY: Int,
+    val height: Int,
     arrayLength: Int = 256 / (64 / log2(height.toFloat())).toInt() + 1
 ) {
     init {
@@ -321,31 +321,20 @@ class Chunk(
     @Volatile
     private var cache: ByteBuf? = null
     private val cacheLock = ReentrantReadWriteLock()
+
+    @Volatile
+    private var cacheLength = 0
     fun getCachedBytes(): ByteBuf {
         try {
             cacheLock.readLock().lock()
-            if (cache != null) return cache!!
+            if (cache != null) return cache!!.slice(0, cacheLength)
             val buf = ByteBufAllocator.DEFAULT.heapBuffer()
             writeToBuffer(buf)
+            cacheLength = buf.writerIndex()
             cache = buf
             return buf
         } finally {
             cacheLock.readLock().unlock()
-        }
-    }
-
-    fun updateCache() {
-        World.globalThreadPool.submit {
-            try {
-                cacheLock.writeLock().lock()
-                cache?.release()
-                cache = null
-                val buf = ByteBufAllocator.DEFAULT.heapBuffer()
-                writeToBuffer(buf)
-                cache = buf
-            } finally {
-                cacheLock.writeLock().unlock()
-            }
         }
     }
 
