@@ -42,3 +42,4 @@ fun toYZX(x: Int, y: Int, z: Int): Int = y shl 8 or (z shl 4) or x
 fun to6bitYZX(x: Int, y: Int, z: Int): Int = y shl 4 or (z shl 2) or x
 fun toXZ(x: Int, z: Int): Long = (z.toLong() shl 32) or x.toLong()
 fun to8bitXZ(first: Int, second: Int) = first shl 4 or second
+fun from8bitXZ(value: Int): Pair<Int, Int> = Pair(value shr 4, value and 0xF)

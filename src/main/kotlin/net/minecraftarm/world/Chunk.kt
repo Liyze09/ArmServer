@@ -3,9 +3,7 @@ package net.minecraftarm.world
 import io.github.liyze09.arms.network.PackUtils.writeVarInt
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.ByteBufAllocator
-import net.minecraftarm.common.to6bitYZX
-import net.minecraftarm.common.toYZX
-import net.minecraftarm.common.writeToBuffer
+import net.minecraftarm.common.*
 import net.minecraftarm.nbt.NbtCompound
 import net.minecraftarm.nbt.NbtLongArray
 import java.util.*
@@ -19,7 +17,6 @@ class Chunk(
     val dimension: Dimension,
     val minY: Int,
     val height: Int,
-    arrayLength: Int = 256 / (64 / log2(height.toFloat())).toInt() + 1
 ) {
     init {
         if (height % 16 != 0) {
@@ -37,69 +34,66 @@ class Chunk(
         if (x < 0 || x > 15 || z < 0 || z > 15 || y < minY || y > maxY) {
             throw IllegalArgumentException("Position out of bounds")
         }
-        return childChunks[(y - minY) / 16 - 1].getBlockState(x, y % 16, z)
+        return childChunks[(y - minY) / 16].getBlockState(x, y % 16, z)
     }
 
     fun setBlockStateIDByChunkPosition(x: Int, y: Int, z: Int, id: Int) {
         if (x < 0 || x > 15 || z < 0 || z > 15 || y < minY || y > maxY) {
             throw IllegalArgumentException("Position out of bounds")
         }
-        childChunks[(y - minY) / 16 - 1]./*Cache will be invalidated there →*/setBlockState(x, y % 16, z, id)
+        childChunks[(y - minY) / 16]./*Cache will be invalidated there →*/setBlockState(x, y % 16, z, id)
     }
 
-    private val worldSurface = LongArray(arrayLength)
-    private val motionBlocking = LongArray(arrayLength)
-    private val b: Int = ceil(log2(height.toFloat())).toInt() // 计算对2的对数后向上取整
-    private val u = 64 / b
-    private val anv = ((1L shl b) - 1L)
+    private val worldSurface = ShortArray(256)
+    private val motionBlocking = ShortArray(256)
     fun getWorldSurface() = worldSurface
     fun getMotionBlocking() = motionBlocking
-    fun getWorldSurface(x: Int, z: Int): Long {
+    fun getWorldSurface(x: Int, z: Int): Short {
         try {
-            val i = x + 16 * z
             heightLock.readLock().lock()
-            return (worldSurface[i / u] shr (i % u)) and anv + minY
+            return worldSurface[to8bitXZ(x, z)]
         } finally {
             heightLock.readLock().unlock()
         }
     }
 
-    fun setWorldSurface(x: Int, z: Int, height: Long) {
+    fun setWorldSurface(x: Int, z: Int, height: Short) {
         invalidateCache()
         try {
-            val i = x + 16 * z
             heightLock.writeLock().lock()
-            var value = worldSurface[i / u]
-            value = value or (height shl (i % u))
-            value = value and (anv shl (i % u)).inv()
-            worldSurface[i / u] = value
+            worldSurface[to8bitXZ(x, z)] = height
         } finally {
             heightLock.writeLock().unlock()
         }
     }
 
-    fun getMotionBlocking(x: Int, z: Int): Long {
+    fun getMotionBlocking(x: Int, z: Int): Short {
         try {
-            val i = x + 16 * z
             heightLock.readLock().lock()
-            return (motionBlocking[i / u] shr (i % u)) and anv + minY
+            return motionBlocking[to8bitXZ(x, z)]
         } finally {
             heightLock.readLock().unlock()
         }
     }
 
-    fun setMotionBlocking(x: Int, z: Int, height: Long) {
+    fun setMotionBlocking(x: Int, z: Int, height: Short) {
         invalidateCache()
         try {
-            val i = x + 16 * z
             heightLock.writeLock().lock()
-            var value = motionBlocking[i / u]
-            value = value or (height shl (i % u))
-            value = value and (anv shl (i % u)).inv()
-            motionBlocking[i / u] = value
+            motionBlocking[to8bitXZ(x, z)] = height
         } finally {
             heightLock.writeLock().unlock()
         }
+    }
+
+    fun updateBlockLight(x: Int, y: Int, z: Int, light: Int) {
+        invalidateCache()
+        childChunks[y / 16].setBlockLight(x, y % 16, z, light)
+    }
+
+    fun updateSkyLight(x: Int, y: Int, z: Int, light: Int) {
+        invalidateCache()
+        childChunks[y / 16].setSkyLight(x, y % 16, z, light)
     }
 
     internal inner class ChildChunk {
@@ -107,7 +101,7 @@ class Chunk(
         val blocks = IntArray(4096)
         private var blockCount = 0
         val blockLight = ByteArray(2048)
-        val skyLight = ByteArray(2048)
+        val skyLight = ByteArray(2048) { dimension.dimensionType.ambientLight.toInt().toByte() }
         private val lock = ReentrantReadWriteLock()
         fun getBlockCount() = blockCount
         fun getBiome(x: Int, y: Int, z: Int): Int {
@@ -229,11 +223,29 @@ class Chunk(
         }
     }
 
+    val bpe: Int = (ceil(log2(height.toFloat())) + 1).toInt()
+    val u = 64 / bpe
+    val mask = (1L shl (bpe - 1)) - 1L
+
     private fun writeToBuffer(buf: ByteBuf) {
+        val motionBlocking = LongArray(height / u)
+        val worldSurface = LongArray(height / u)
+        this.worldSurface.forEachIndexed { index, value ->
+            val p = from8bitXZ(index)
+            val i = p.first + p.second * 16
+            worldSurface[i / u] = worldSurface[i / u] and (mask.inv() shl (i % u))
+            worldSurface[i / u] = worldSurface[i / u] or ((value.toLong() - minY) and mask shl (i % u))
+        }
+        this.motionBlocking.forEachIndexed { index, value ->
+            val k = from8bitXZ(index)
+            val i = k.first + k.second * 16
+            motionBlocking[i / u] = motionBlocking[i / u] and (mask.inv() shl (i % u))
+            motionBlocking[i / u] = motionBlocking[i / u] or ((value.toLong() - minY) and mask shl (i % u))
+        }
         // Heightmap
         NbtCompound(
-            "MOTION_BLOCKING" to NbtLongArray(this.motionBlocking),
-            "WORLD_SURFACE" to NbtLongArray(this.worldSurface)
+            "MOTION_BLOCKING" to NbtLongArray(motionBlocking),
+            "WORLD_SURFACE" to NbtLongArray(worldSurface)
         ).encodeAsRoot(buf)
         val sectionsBuf = ByteBufAllocator.DEFAULT.heapBuffer()
         this.childChunks.forEach { chunk ->
@@ -290,12 +302,12 @@ class Chunk(
 
             if (hasNonZeroSkyLight) {
                 skyLightBuf.writeVarInt(2048)
-                sectionsBuf.writeBytes(chunk.skyLight)
+                skyLightBuf.writeBytes(chunk.skyLight)
             }
 
             if (hasNonZeroBlockLight) {
                 blockLightBuf.writeVarInt(2048)
-                sectionsBuf.writeBytes(chunk.blockLight)
+                blockLightBuf.writeBytes(chunk.blockLight)
             }
         }
         skyLightMask.writeToBuffer(buf)

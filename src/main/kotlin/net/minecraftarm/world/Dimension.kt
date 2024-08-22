@@ -10,15 +10,15 @@ import net.minecraftarm.registry.block.BlockState
 import net.minecraftarm.registry.block.blockStatesByProtocolId
 import net.minecraftarm.registry.block.idByBlockState
 import net.minecraftarm.world.gen.WorldgenProvider
+import net.minecraftarm.world.light.LightEngine
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.math.log2
 
 abstract class Dimension(val worldgen: WorldgenProvider) {
     abstract val dimensionType: DimensionType
     abstract val name: Identifier
     private val chunkMap = ConcurrentHashMap<Long, Chunk>(512)
     val entities = ConcurrentHashMap<Int, Entity>(128)
-    private val cachedInt by lazy { 256 / (64 / log2(dimensionType.height.toFloat())).toInt() + 1 }
+    internal fun getChunks() = chunkMap.values
     fun getChunk(x: Int, z: Int): Chunk {
         val ret = chunkMap.getOrPut(toXZ(x, z)) {
             Chunk(
@@ -26,12 +26,12 @@ abstract class Dimension(val worldgen: WorldgenProvider) {
                 z,
                 this,
                 dimensionType.minY,
-                dimensionType.height,
-                cachedInt
+                dimensionType.height
             )
             // TODO Load save
         }
         if (ret.isProto()) ret.upgradeChunk()
+        LightEngine.getDefault().updateLight(ret)
         return ret
     }
 
@@ -43,8 +43,7 @@ abstract class Dimension(val worldgen: WorldgenProvider) {
                 z,
                 this,
                 dimensionType.minY,
-                dimensionType.height,
-                cachedInt
+                dimensionType.height
             )
         }
     }
