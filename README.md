@@ -1,3 +1,4 @@
+It's a early test for [Spot](https://github.com/SpotMC/Spot/)
 # Minecraft Arm Server
 
 Arm Server is a multithreaded Minecraft server without any code from Mojang.
